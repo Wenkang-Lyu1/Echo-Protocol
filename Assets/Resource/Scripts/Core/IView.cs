@@ -1,24 +1,27 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 // ============================================================
-// IView -- lifecycle interface for Views with a parent-child hierarchy.
+// IView -- what every View provides.
+//
+// A View is presentation only: it shows data, it never changes it.
+// Views form a tree, and the tree is the only structure to learn:
+//
+//     PlayerHud (parent)
+//      +-- AmmoView   (child)
+//      +-- HpView     (child)
+//
 // Rules:
-//   1) Views form a tree structure.
-//   2) Hiding the parent recursively hides all child Views.
-//   3) Parent and child access each other via GetChild / GetChild<T>.
-//   4) View is presentation-only and must never modify Model.
+//   1) A child is attached with child.SetParent(parent); that is the only
+//      way to change the tree.
+//   2) Hiding a parent hides every child; shutting a parent down shuts
+//      down every child.
+//   3) Parent and child reach each other with GetChild<T>() / GetData<T>().
 // ============================================================
-
 public enum ViewState
 {
-    None,
-    Created,
-    Initializing,
-    Ready,
-    Showing,
-    Hiding,
+    Created,   // built, not initialized yet
+    Ready,     // initialized, hidden
+    Showing,   // visible on screen
     Destroyed
 }
 
@@ -26,46 +29,42 @@ public interface IView
 {
     string ViewName { get; }
     ViewState State { get; }
+
     IView Parent { get; }
     IEnumerable<IView> Children { get; }
-
     void SetParent(IView parent);
-    void AddChild(IView child);
-    void RemoveChild(IView child);
 
     void Initialize();
     void Show();
     void Hide();
     void Refresh();
-    void Destroy();
-
-    // Forces every View to implement its own data-refresh logic.
-    // Concrete Views override OnRefresh(); Refresh() calls it internally.
-    void RefreshData();
+    void Shutdown();
 }
 
 public static class ViewExtensions
 {
+    // Depth-first search for the first child of the given type.
     public static T GetChild<T>(this IView view) where T : class, IView
     {
         if (view == null) return null;
-        foreach (var c in view.Children)
+        foreach (var child in view.Children)
         {
-            if (c is T t) return t;
-            var found = c.GetChild<T>();
-            if (found != null) return found;
+            if (child is T match) return match;
+            var nested = child.GetChild<T>();
+            if (nested != null) return nested;
         }
         return null;
     }
 
+    // Depth-first search for the first child with the given GameObject name.
     public static IView GetChild(this IView view, string name)
     {
         if (view == null) return null;
-        foreach (var c in view.Children)
+        foreach (var child in view.Children)
         {
-            if (c.ViewName == name) return c;
-            var found = c.GetChild(name);
-            if (found != null) return found;
+            if (child.ViewName == name) return child;
+            var nested = child.GetChild(name);
+            if (nested != null) return nested;
         }
         return null;
     }

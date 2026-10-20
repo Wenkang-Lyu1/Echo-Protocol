@@ -19,7 +19,7 @@ public class UIControl : GlobalControl<UIControl, UIModel>
     protected override void OnInitialize()
     {
         base.OnInitialize();
-        foreach (var p in panels)
+        foreach (var p in panels ?? Array.Empty<UIPanel>())
         {
             if (p == null || p.Type == UIPanelType.None) continue;
             _registry[p.Type] = p;
@@ -60,7 +60,7 @@ public class UIControl : GlobalControl<UIControl, UIModel>
             data = new ValueArgs<UIPanelType>(type)
         });
 
-                // Resume gameplay when HUD is closed.
+        // Opening the pause panel freezes the game.
         if (type == UIPanelType.Pause)
             GameManager.Instance?.RequestPause();
     }

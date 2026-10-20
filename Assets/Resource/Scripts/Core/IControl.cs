@@ -1,20 +1,23 @@
-using UnityEngine;
-
 // ============================================================
-// IControl -- interface that every Control must implement.
-// Managed centrally by ControlRegistry.
+// IControl -- what every Control provides.
+//
+// A Control is the only place where game logic lives. It owns exactly one
+// Model and is registered in ControlRegistry, which drives the lifecycle:
+//
+//     Initialize() -> Tick(dt) ... -> ResetState() -> Shutdown()
+//
+// Reset is called ResetState on purpose: "Reset" is a Unity editor message
+// on MonoBehaviours, so a runtime reset must use another name.
 // ============================================================
 public interface IControl
 {
-    string ControlName { get; }
+    // The data this Control owns. Never null after Initialize().
+    ModelBase Model { get; }
+
     bool IsInitialized { get; }
-    bool HasModel { get; }
 
     void Initialize();
     void Tick(float deltaTime);
-    void Reset();
+    void ResetState();
     void Shutdown();
-
-        // Entry point for View layer to read data; type-safe access is provided
-    ModelBase GetModelUntyped();
 }

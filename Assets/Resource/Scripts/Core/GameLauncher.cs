@@ -1,25 +1,43 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
+// ============================================================
+// GameLauncher -- the framework entry point. It lives on the Frame object
+// of Start_Scene, next to ControlRegistry.
+//
+// It does three things:
+//   1) Keeps the whole Frame tree alive across scene loads, so the global
+//      singletons living under Frame (EventCenter, GameManager, ...) do not
+//      have to care about persistence themselves.
+//   2) Starts every Control, in ControlPhase order, once the scene is up.
+//   3) Announces the boot level with Game_Start. Nothing listens yet in a
+//      fresh project - wire a Control to it when the first level exists.
+//
+// Start_Scene is only needed once: the tree is persistent afterwards.
+// ============================================================
 [DefaultExecutionOrder(-1000)]
 public class GameLauncher : MonoBehaviour
 {
     [SerializeField] private string bootLevelName = "Level01";
+    [SerializeField] private bool showLoginOnBoot = true;
 
     private void Awake()
     {
-        // Guarantee the registry exists before anything else runs.
-        // Individual Controls self-register in their own Awake; the registry
-        // drives their Initialize() in order during Start().
-        var _ = ControlRegistry.Instance;
-        var _2 = EventCenter.Instance;
+        // transform.root is the Frame object, so every child singleton under
+        // it survives a scene change without its own DontDestroyOnLoad.
+        DontDestroyOnLoad(transform.root.gameObject);
     }
 
     private void Start()
     {
-        // All Controls are initialized in registration order by ControlRegistry.
-        // Do NOT call Initialize() manually here — that is the registry's job.
+        // Controls registered themselves in their Awake; the registry is the
+        // only thing that calls Initialize() on them, in phase order.
         ControlRegistry.Instance.InitializeAll();
+
+        if (showLoginOnBoot)
+        {
+            LoginControl.Instance.OpenLogin();
+            return;
+        }
 
         EventCenter.Instance.Dispatch(new GameEventArgs
         {

@@ -1,23 +1,28 @@
-using System;
 using UnityEngine;
 
 // ============================================================
 // WarControl -- top-level combat controller.
-// Responsibilities:
-//   1) Holds WarModel (persistent data).
-//   2) Aggregates four sub-modules: Player / Weapon / Echo / Enemy.
-//   3) Owns the combat flow: Prepare -> Start -> Pause -> End.
-//   4) Only exposes Model access and flow APIs to the outside.
+//
+// It owns the combat flow (Prepare -> Active -> Paused -> Ended) and the
+// four sub-modules that do the actual work:
+//
+//     WarControl          <- registered in ControlRegistry, ticks itself
+//      +-- PlayerControl  <- sub-modules: created and ticked by WarControl
+//      +-- WeaponControl
+//      +-- EchoControl
+//      +-- EnemyControl
+//
+// Sub-modules use "AutoRegister => false" so the registry does not tick
+// them a second time.
 // ============================================================
 public class WarControl : GlobalControl<WarControl, WarModel>
 {
-        [Header("Sub-module references (assign in Inspector or create in code)")]
+    [Header("Sub-modules (leave empty to let them be created in code)")]
     [SerializeField] protected PlayerControl playerControl;
     [SerializeField] protected WeaponControl weaponControl;
     [SerializeField] protected EchoControl echoControl;
     [SerializeField] protected EnemyControl enemyControl;
 
-        // Sub-module accessors (other Controls reach them here).
     public PlayerControl Player => playerControl;
     public WeaponControl Weapon => weaponControl;
     public EchoControl Echo => echoControl;
@@ -27,7 +32,6 @@ public class WarControl : GlobalControl<WarControl, WarModel>
     {
         base.OnInitialize();
 
-                // Ensure sub-modules exist.
         if (playerControl == null) playerControl = gameObject.AddComponent<PlayerControl>();
         if (weaponControl == null) weaponControl = gameObject.AddComponent<WeaponControl>();
         if (echoControl == null) echoControl = gameObject.AddComponent<EchoControl>();
@@ -38,17 +42,10 @@ public class WarControl : GlobalControl<WarControl, WarModel>
         echoControl.Initialize();
         enemyControl.Initialize();
 
-        BindEventListeners();
-    }
-
-    // Renamed to avoid hiding any future base-class member (CS0114).
-    private void BindEventListeners()
-    {
         EventCenter.Instance.AddListener(GameEvent.Enemy_Die, OnEnemyDie);
         EventCenter.Instance.AddListener(GameEvent.Player_Died, OnPlayerDie);
     }
 
-    // 'override' removes CS0114 (hides inherited member).
     protected override void Unsubscribe()
     {
         EventCenter.Instance.RemoveListener(GameEvent.Enemy_Die, OnEnemyDie);
@@ -61,31 +58,30 @@ public class WarControl : GlobalControl<WarControl, WarModel>
 
         model.elapsedTime += deltaTime;
 
-                // Notify UI to refresh elapsed time.
         EventCenter.Instance.Dispatch(new GameEventArgs
         {
             eventType = GameEvent.War_TimeChanged,
             data = new ValueArgs<float>(model.elapsedTime)
         });
 
+        // WarControl is the only driver of its sub-modules.
         playerControl.Tick(deltaTime);
         weaponControl.Tick(deltaTime);
         echoControl.Tick(deltaTime);
         enemyControl.Tick(deltaTime);
     }
 
-        // ---- Flow Interface ----
+    // ---- Flow ----
     public void StartWar()
     {
         if (model.state != WarState.Idle && model.state != WarState.Ended) return;
-        model.state = WarState.Preparing;
 
+        model.state = WarState.Preparing;
         EventCenter.Instance.Dispatch(new GameEventArgs
         {
             eventType = GameEvent.War_Start,
             data = model
         });
-
         model.state = WarState.Active;
     }
 
@@ -116,13 +112,13 @@ public class WarControl : GlobalControl<WarControl, WarModel>
     public override void ResetState()
     {
         base.ResetState();
-        playerControl?.Reset();
-        weaponControl?.Reset();
-        echoControl?.Reset();
-        enemyControl?.Reset();
+        playerControl?.ResetState();
+        weaponControl?.ResetState();
+        echoControl?.ResetState();
+        enemyControl?.ResetState();
     }
 
-        // ---- Event Handlers ----
+    // ---- Event handlers ----
     private void OnEnemyDie(GameEventArgs args)
     {
         model.killCount++;
@@ -139,11 +135,5 @@ public class WarControl : GlobalControl<WarControl, WarModel>
     private void OnPlayerDie(GameEventArgs args)
     {
         EndWar(false);
-    }
-
-    protected override void OnTeardown()
-    {
-        Unsubscribe();
-        base.OnTeardown();
     }
 }

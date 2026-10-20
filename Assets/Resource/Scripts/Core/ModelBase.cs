@@ -1,18 +1,17 @@
 using System;
-using UnityEngine;
 
 // ============================================================
-// ModelBase -- base class for all Models.
-// Conventions:
-//   1) Model is pure data; it must not reference View / Control / MonoBehaviour.
-//   2) Model is serializable for easy save/load.
-//   3) Model must not hold Unity object references other than value types (use ID / path instead).
+// ModelBase -- base class for every Model.
+//
+// A Model is plain data: no MonoBehaviour, no Unity object references
+// (store ids or paths instead), and [Serializable] so it can be saved.
+//
+// Reset() is safe to name that way because a Model is not a MonoBehaviour;
+// Controls use ResetState() instead, see IControl.
 // ============================================================
 [Serializable]
 public abstract class ModelBase
 {
-    public virtual void Reset()
-    {
-                // Reflectively reset all fields to their default values (can be overridden by subclasses).
-    }
+    // Restore default values. Subclasses override to reset their own fields.
+    public virtual void Reset() { }
 }

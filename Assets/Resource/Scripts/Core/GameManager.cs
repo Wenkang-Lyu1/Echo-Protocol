@@ -1,6 +1,15 @@
 using System;
 using UnityEngine;
 
+// ============================================================
+// GameManager -- the game flow as one small state machine.
+//
+//     Boot -> MainMenu -> Loading -> Playing <-> Paused -> GameOver / Victory
+//
+// Every change is announced with Game_StateChanged, so UI and Controls can
+// react without polling. Pausing also stops Time.timeScale here, which is
+// the only place allowed to touch it.
+// ============================================================
 public enum GameState
 {
     Boot,
@@ -12,6 +21,7 @@ public enum GameState
     Victory
 }
 
+[DefaultExecutionOrder(-900)]
 public class GameManager : MonoSingleton<GameManager>
 {
     public GameState State { get; private set; } = GameState.Boot;
@@ -24,28 +34,30 @@ public class GameManager : MonoSingleton<GameManager>
     public void SetState(GameState next)
     {
         if (State == next) return;
-        var prev = State;
+
+        var previous = State;
         State = next;
 
         switch (next)
         {
+            case GameState.MainMenu:
+            case GameState.Loading:
             case GameState.Playing:
                 Time.timeScale = 1f;
                 break;
             case GameState.Paused:
-                Time.timeScale = 0f;
-                break;
             case GameState.GameOver:
             case GameState.Victory:
                 Time.timeScale = 0f;
                 break;
         }
 
-        OnStateChanged?.Invoke(prev, next);
+        OnStateChanged?.Invoke(previous, next);
+
         EventCenter.Instance.Dispatch(new GameEventArgs
         {
             eventType = GameEvent.Game_StateChanged,
-            data = new StateChangeArgs<GameState>(prev, next)
+            data = new StateChangeArgs<GameState>(previous, next)
         });
     }
 

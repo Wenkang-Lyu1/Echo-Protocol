@@ -18,6 +18,9 @@ public class WeaponControl : GlobalControl<WeaponControl, WeaponModel>
 
     private Vector3 _recoilBias;
 
+    // WarControl owns and ticks this sub-module.
+    protected override bool AutoRegister => false;
+
     protected override void OnInitialize()
     {
         base.OnInitialize();
@@ -48,13 +51,14 @@ public class WeaponControl : GlobalControl<WeaponControl, WeaponModel>
         model.fireCooldown = 1f / Mathf.Max(0.1f, model.fireRate);
         model.currentAmmo--;
 
-        var hit = false;
         for (var i = 0; i < model.pellets; i++)
         {
             var dir = WeaponUtil.ApplySpread(direction, model.spread);
             if (Physics.Raycast(origin, dir, out var r, model.range, hitMask, QueryTriggerInteraction.Ignore))
             {
-                hit = true;
+                // Weapon_Fired carries the hit for views (muzzle flash, anim).
+                // Damage is not applied here on purpose: send the same HitArgs
+                // to DamageSystem.Instance.Dispatch() when damage is designed.
                 EventCenter.Instance.Dispatch(new GameEventArgs
                 {
                     eventType = GameEvent.Weapon_Fired,

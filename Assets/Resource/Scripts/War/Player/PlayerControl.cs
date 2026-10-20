@@ -9,7 +9,7 @@ using UnityEngine;
 //   3) Cooperates with Weapon / Echo (via their respective Controls).
 // ============================================================
 [RequireComponent(typeof(CharacterController))]
-public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>
+public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamageable
 {
         [Header("Movement Parameters")]
     [SerializeField] private float walkSpeed = 5f;
@@ -29,6 +29,13 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>
     private float _invincibleTimer;
 
     public Transform CameraPivot => cameraPivot;
+
+    // ---- IDamageable (see DamageSystem) ----
+    public float Hp => model.hp;
+    public bool IsDead => model.isDead;
+
+    // WarControl owns and ticks this sub-module.
+    protected override bool AutoRegister => false;
 
     protected override void OnInitialize()
     {

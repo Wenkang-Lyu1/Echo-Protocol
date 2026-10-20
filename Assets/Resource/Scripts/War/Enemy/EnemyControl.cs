@@ -9,7 +9,7 @@ using UnityEngine.AI;
 // ============================================================
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(AnimDriver))]
-public class EnemyControl : GlobalControl<EnemyControl, EnemyModel>
+public class EnemyControl : GlobalControl<EnemyControl, EnemyModel>, IDamageable
 {
     [SerializeField] private Transform eyePoint;
     [SerializeField] private float eyeHeight = 1.6f;
@@ -21,6 +21,12 @@ public class EnemyControl : GlobalControl<EnemyControl, EnemyModel>
 
     public bool IsDead => model.isDead;
     public float HpRatio => model.HpRatio;
+
+    // ---- IDamageable (see DamageSystem) ----
+    public float Hp => model.hp;
+
+    // WarControl owns and ticks this sub-module.
+    protected override bool AutoRegister => false;
 
     protected override void OnInitialize()
     {

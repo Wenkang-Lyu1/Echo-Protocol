@@ -4,9 +4,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // ============================================================
-// AssetLoader -- event-driven synchronous / asynchronous resource loading.
-// To switch to Addressables later, only this file needs to change.
+// AssetLoader -- event-driven asset loading.
+//
+//     EventCenter.Dispatch(Resource_LoadRequest, new LoadRequest(...))
+//     -> Resource_Loaded event + callback, cached when asked
+//
+// Everything goes through Resources today. Swapping in Addressables later
+// means changing this file only - no caller knows how the bytes arrive.
 // ============================================================
+[DefaultExecutionOrder(-850)]
 public class AssetLoader : MonoSingleton<AssetLoader>
 {
     [SerializeField] private bool useResources = true;
@@ -17,6 +23,8 @@ public class AssetLoader : MonoSingleton<AssetLoader>
     protected override void Awake()
     {
         base.Awake();
+        if (IsDuplicate) return;
+
         EventCenter.Instance.AddListener(GameEvent.Resource_LoadRequest, OnLoadRequest);
     }
 

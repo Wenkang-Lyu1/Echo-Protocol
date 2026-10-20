@@ -26,6 +26,9 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
     private Vector2 _lookAccum;
     private ObjectPool<EchoPlayback> _pool;
 
+    // WarControl owns and ticks this sub-module.
+    protected override bool AutoRegister => false;
+
     protected override void OnInitialize()
     {
         base.OnInitialize();

@@ -3,19 +3,14 @@ using System.Reflection;
 using UnityEngine;
 
 // ============================================================
-// InputManager -- wraps Unity's Input System so the rest of the
-// codebase never touches InputActionMap / CallbackContext directly.
+// InputManager -- the only place that talks to the Input System.
 //
-// Compatibility: the Input System package was renamed several times
-// across Unity versions:
-//   - Unity 2019.3+ : UnityEngine.InputSystem (package)
-//   - older projects : the same types may live in a different asmdef
+// The rest of the codebase reads MoveInput / LookInput / FireHeld ... and
+// never touches InputActionMap or CallbackContext.
 //
-// To avoid CS0234 / CS0246 we resolve the two key types by reflection
-// and only bind when they are actually present. If the Input System
-// is missing entirely the manager simply stays inert (no errors).
+// The Input System package is resolved by reflection, so a project without
+// it still compiles and simply runs with no input (no errors, no #if soup).
 // ============================================================
-
 [CreateAssetMenu(menuName = "EchoProtocol/InputProfile")]
 public class InputProfile : ScriptableObject
 {
@@ -30,6 +25,7 @@ public class InputProfile : ScriptableObject
     public string pause = "Pause";
 }
 
+[DefaultExecutionOrder(-900)]
 public class InputManager : MonoSingleton<InputManager>
 {
     [SerializeField] private InputProfile profile;
@@ -49,15 +45,11 @@ public class InputManager : MonoSingleton<InputManager>
     private MethodInfo _readValueVector2;
     private MethodInfo _readValueAsButton;
 
-    private static readonly string[] _inputTypeNames =
-    {
-        "UnityEngine.InputSystem.PlayerInput, UnityEngine.InputSystem",
-        "UnityEngine.InputSystem.UI.InputSystemUIInputModule, UnityEngine.InputSystem.UI",
-    };
-
     protected override void Awake()
     {
         base.Awake();
+        if (IsDuplicate) return;
+
         _playerInput = ResolveComponentByTypeName("UnityEngine.InputSystem.PlayerInput, UnityEngine.InputSystem");
         if (_playerInput == null)
             _playerInput = AddComponentIfMissing("UnityEngine.InputSystem.PlayerInput, UnityEngine.InputSystem");
@@ -65,14 +57,9 @@ public class InputManager : MonoSingleton<InputManager>
         var ctxType = Type.GetType("UnityEngine.InputSystem.InputAction+CallbackContext, UnityEngine.InputSystem");
         if (ctxType != null)
         {
-            _readValueVector2 = ctxType.GetMethod("ReadValue",
-                new[] { typeof(Vector2) });
+            _readValueVector2 = ctxType.GetMethod("ReadValue", new[] { typeof(Vector2) });
             _readValueAsButton = ctxType.GetMethod("ReadValueAsButton");
         }
-    }
-
-    private void OnDestroy()
-    {
     }
 
     private object ResolveComponentByTypeName(string typeName)
@@ -98,6 +85,7 @@ public class InputManager : MonoSingleton<InputManager>
         if (actionsProp == null) return;
         _actionMap = actionsProp.GetValue(_playerInput, null);
         if (_actionMap == null) return;
+        if (profile == null) profile = ScriptableObject.CreateInstance<InputProfile>();
 
         Bind(profile.move,
             c => MoveInput = ReadVector2(c),
@@ -204,4 +192,5 @@ public class InputManager : MonoSingleton<InputManager>
         var method = actions.GetType().GetMethod(enable ? "Enable" : "Disable");
         method?.Invoke(actions, null);
     }
+
 }

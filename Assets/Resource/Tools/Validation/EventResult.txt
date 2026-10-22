@@ -1,0 +1,24 @@
+PASS: Ignore empty event/handler
+PASS: Module event alias, legacy args, payload and deduplication
+PASS: Clear removes the final subscription
+PASS: Clear supports reuse; Dispose is idempotent
+PASS: Disposed scopes reject new subscriptions
+PASS: Existing AddListener/RemoveListener remain compatible
+PASS: Disposed listener in an existing dispatch snapshot is skipped
+PASS: One throwing listener is logged without blocking the next
+PASS: Control initializes subscriptions once
+PASS: Control reset preserves one subscription
+PASS: Global Control supports direct cross-module method calls
+PASS: Control shutdown releases subscriptions
+PASS: Control can initialize a fresh scope after shutdown
+PASS: UI registers in FirstOpen once
+PASS: UI ignores events during Close and recycle waiting
+PASS: UI ignores events while its parent is inactive
+PASS: UI resumes without duplicate subscriptions
+PASS: UI disposal releases its scope exactly once
+PASS: Dispose requested again from Close does not recurse or clean up twice
+PASS: Close requesting Dispose runs its close callback only once
+PASS: Nested dispatch is not reentrant
+PASS: Nested A/B/C execute on successively later frames while paused
+PASS: Queued events use current subscribers, not captured old delegates
+PASS: Scope disposal never recreates a destroyed event center

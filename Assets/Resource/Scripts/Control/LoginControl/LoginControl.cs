@@ -71,6 +71,7 @@ public sealed class LoginControl : GlobalControl<LoginControl, LoginModel>
             eventType = GameEvent.Game_Start,
             data = new ValueArgs<string>(gameplayScene)
         });
+        EventCenter.Instance.Dispatch(LoginEvent.OnLoginDone, new ValueArgs<string>(gameplayScene));
     }
 
     public void SetSettingsOpen(bool open)
@@ -108,5 +109,9 @@ public sealed class LoginControl : GlobalControl<LoginControl, LoginModel>
 #endif
     }
 
-    private void Notify() => Changed?.Invoke();
+    private void Notify()
+    {
+        Changed?.Invoke();
+        EventCenter.Instance.Dispatch(LoginEvent.OnChanged);
+    }
 }

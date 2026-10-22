@@ -77,4 +77,8 @@ public enum GameEvent
     UI_ClosePanel,
     UI_Refresh,
     UI_Message,
+
+    // Backing identifiers for module event names (use LoginEvent at call sites).
+    Login_Changed,
+    Login_Done,
 }

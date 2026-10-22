@@ -33,24 +33,28 @@ public sealed class U_Login_MainView : UIViewBase
         fullScreenToggle.onValueChanged.AddListener(OnFullScreen);
     }
 
-    protected override void _FirstOpen() { }
+    protected override void _FirstOpen() { AddEventListener(); }
+
+    private void AddEventListener()
+    {
+        Events.Listen(LoginEvent.OnChanged, OnLoginChanged);
+    }
+
+    private void OnLoginChanged(GameEventArgs args) => Refresh();
 
     protected override void _Open()
     {
-        _control.Changed += Refresh;
         modelPreview.Show();
     }
 
     protected override void _Close()
     {
-        _control.Changed -= Refresh;
         settingsRoot.SetActive(false);
         modelPreview.Hide();
     }
 
     protected override void _Dispose()
     {
-        if (_control != null) _control.Changed -= Refresh;
         if (startButton != null) startButton.onClick.RemoveListener(OnStart);
         if (quitButton != null) quitButton.onClick.RemoveListener(OnQuit);
         if (settingsButton != null) settingsButton.onClick.RemoveListener(OnSettings);

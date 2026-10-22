@@ -25,16 +25,14 @@ public class UIControl : GlobalControl<UIControl, UIModel>
             _registry[p.Type] = p;
         }
 
-        EventCenter.Instance.AddListener(GameEvent.Game_TogglePause, OnTogglePause);
-        EventCenter.Instance.AddListener(GameEvent.Game_GameOver, OnGameOver);
-        EventCenter.Instance.AddListener(GameEvent.Game_Victory, OnVictory);
+        AddEventListener();
     }
 
-    protected override void Unsubscribe()
+    private void AddEventListener()
     {
-        EventCenter.Instance.RemoveListener(GameEvent.Game_TogglePause, OnTogglePause);
-        EventCenter.Instance.RemoveListener(GameEvent.Game_GameOver, OnGameOver);
-        EventCenter.Instance.RemoveListener(GameEvent.Game_Victory, OnVictory);
+        Events.Listen(GameEvent.Game_TogglePause, OnTogglePause);
+        Events.Listen(GameEvent.Game_GameOver, OnGameOver);
+        Events.Listen(GameEvent.Game_Victory, OnVictory);
     }
 
     public bool IsOpen(UIPanelType type)

@@ -1,0 +1,6 @@
+Unity: 2021.3.5f1
+Models: 97
+Prefabs: 97
+Mesh renderers: 151
+Materials: Standard shader, shared palette textures.
+Validation: all meshes nonempty; all prefab materials and textures resolved.

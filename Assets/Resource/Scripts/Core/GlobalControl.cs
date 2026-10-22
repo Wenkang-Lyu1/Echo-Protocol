@@ -6,6 +6,7 @@ using UnityEngine;
 //
 // A Control is a global singleton (XxxControl.Instance) that owns one Model
 // and all the logic for it. Views only read the Model; they never write it.
+// Other modules may call public business methods or subscribe to notifications.
 //
 // What you get for free:
 //   1) The instance is created on demand and registered in ControlRegistry.
@@ -18,7 +19,7 @@ using UnityEngine;
 //   OnInitialize()  -> start listening to events here
 //   Tick(dt)        -> per-frame work
 //   ResetState()    -> back to a clean state (call base first)
-//   Unsubscribe()   -> stop listening (called on reset/shutdown)
+//   Unsubscribe()   -> stop legacy listeners (called on shutdown)
 //   OnTeardown()    -> extra cleanup before Shutdown
 // ============================================================
 public abstract class GlobalControl<T, M> : MonoSingleton<T>, IControl
@@ -30,6 +31,9 @@ public abstract class GlobalControl<T, M> : MonoSingleton<T>, IControl
 
     public M model { get; protected set; }
     public ViewBase View => view;
+    private EventScope _events;
+    // Optional capability: Controls without subscriptions allocate nothing.
+    protected EventScope Events => _events ?? (_events = new EventScope(EventCenter.Instance));
 
     // ---- IControl ----
     ModelBase IControl.Model => model;
@@ -66,8 +70,17 @@ public abstract class GlobalControl<T, M> : MonoSingleton<T>, IControl
             view.Bind(model);
         }
 
-        OnInitialize();
-        IsInitialized = true;
+        try
+        {
+            OnInitialize();
+            IsInitialized = true;
+        }
+        catch
+        {
+            _events?.Dispose();
+            _events = null;
+            throw;
+        }
     }
 
     // Subclasses override this instead of Initialize().
@@ -83,9 +96,17 @@ public abstract class GlobalControl<T, M> : MonoSingleton<T>, IControl
 
     public virtual void Shutdown()
     {
-        view?.Shutdown();
-        Unsubscribe();
-        IsInitialized = false;
+        try { view?.Shutdown(); }
+        finally
+        {
+            try { Unsubscribe(); }
+            finally
+            {
+                _events?.Dispose();
+                _events = null;
+                IsInitialized = false;
+            }
+        }
     }
 
     // The one way a View gets data: XxxControl.Instance.GetModel().

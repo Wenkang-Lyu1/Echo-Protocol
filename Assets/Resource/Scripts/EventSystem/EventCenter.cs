@@ -1,34 +1,53 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [DefaultExecutionOrder(-2000)]
+// Cross-module requests and notifications. Nested dispatch runs on later frames.
 public class EventCenter : MonoSingleton<EventCenter>
 {
-    private readonly Dictionary<GameEvent, Action<GameEventArgs>> _listeners =
-        new Dictionary<GameEvent, Action<GameEventArgs>>();
+    private sealed class Listeners
+    {
+        public Action<GameEventArgs> Callbacks;
+        public Delegate[] Snapshot;
+    }
 
-    private readonly List<GameEventArgs> _deferred = new List<GameEventArgs>();
+    private readonly struct PendingEvent
+    {
+        public readonly GameEventArgs Args;
+        public readonly int Frame;
+        public PendingEvent(GameEventArgs args) { Args = args; Frame = Time.frameCount + 1; }
+    }
+
+    private readonly Dictionary<GameEvent, Listeners> _listeners = new Dictionary<GameEvent, Listeners>();
+    private readonly Queue<PendingEvent> _deferred = new Queue<PendingEvent>();
     private bool _isDispatching;
 
     public bool HasListener(GameEvent evt)
     {
-        return _listeners.TryGetValue(evt, out var cb) && cb != null;
+        return _listeners.ContainsKey(evt);
     }
 
     public void AddListener(GameEvent evt, Action<GameEventArgs> cb)
     {
-        if (!_listeners.ContainsKey(evt))
-            _listeners[evt] = null;
-        _listeners[evt] += cb;
+        if (evt == GameEvent.None || cb == null) return;
+        if (!_listeners.TryGetValue(evt, out var listeners))
+            _listeners.Add(evt, listeners = new Listeners());
+        listeners.Callbacks += cb;
+        // Allocate a stable invocation snapshot only when subscriptions change.
+        listeners.Snapshot = listeners.Callbacks.GetInvocationList();
     }
 
     public void RemoveListener(GameEvent evt, Action<GameEventArgs> cb)
     {
-        if (!_listeners.ContainsKey(evt)) return;
-        _listeners[evt] -= cb;
+        if (cb == null || !_listeners.TryGetValue(evt, out var listeners)) return;
+        listeners.Callbacks -= cb;
+        if (listeners.Callbacks == null) _listeners.Remove(evt);
+        else listeners.Snapshot = listeners.Callbacks.GetInvocationList();
     }
+
+    public void Dispatch(GameEvent evt, object data = null) =>
+        Dispatch(new GameEventArgs { eventType = evt, data = data });
 
     public void Dispatch(GameEventArgs args)
     {
@@ -36,40 +55,42 @@ public class EventCenter : MonoSingleton<EventCenter>
 
         if (_isDispatching)
         {
-            _deferred.Add(args);
+            _deferred.Enqueue(new PendingEvent(args));
             return;
         }
 
-        if (!_listeners.TryGetValue(args.eventType, out var cb) || cb == null)
+        if (!_listeners.TryGetValue(args.eventType, out var listeners))
             return;
 
+        var snapshot = listeners.Snapshot;
         _isDispatching = true;
         try
         {
-            cb.Invoke(args);
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
+            foreach (Action<GameEventArgs> callback in snapshot)
+            {
+                try { callback(args); }
+                catch (Exception error) { Debug.LogException(error); }
+            }
         }
         finally
         {
             _isDispatching = false;
         }
-
-        if (_deferred.Count > 0)
-            StartCoroutine(FlushDeferred());
     }
 
-    private IEnumerator FlushDeferred()
+    private void Update()
     {
-        yield return null;
-        while (_deferred.Count > 0)
+        int count = _deferred.Count;
+        for (int i = 0; i < count && _deferred.Count > 0; i++)
         {
-            var snapshot = _deferred.ToArray();
-            _deferred.Clear();
-            foreach (var a in snapshot)
-                Dispatch(a);
+            if (_deferred.Peek().Frame > Time.frameCount) break;
+            Dispatch(_deferred.Dequeue().Args);
         }
+    }
+
+    private void OnDestroy()
+    {
+        _listeners.Clear();
+        _deferred.Clear();
     }
 }

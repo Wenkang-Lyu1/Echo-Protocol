@@ -7,6 +7,20 @@ public abstract class UIViewBase : ViewBase
     private bool _widgetsBound;
     private bool _firstOpened;
     private bool _disposing;
+    private bool _closing;
+    private EventScope _events;
+    protected EventScope Events
+    {
+        get
+        {
+            if (_disposing || State == ViewState.Destroyed)
+                throw new System.ObjectDisposedException(GetType().Name);
+            return _events ?? (_events = new EventScope(EventCenter.Instance, CanReceiveEvents));
+        }
+    }
+
+    private bool CanReceiveEvents() => this != null && !_closing && !_disposing &&
+        State == ViewState.Showing && gameObject.activeInHierarchy;
 
     public void Initialized()
     {
@@ -57,23 +71,46 @@ public abstract class UIViewBase : ViewBase
 
     public sealed override void Hide()
     {
-        if (_disposing || State != ViewState.Showing) return;
+        if (_disposing || _closing || State != ViewState.Showing) return;
+        _closing = true;
         try { _Close(); }
         finally
         {
-            base.Hide();
-            UIViewManager.Instance?.ScheduleRecycle(this);
+            try
+            {
+                base.Hide();
+                UIViewManager.Instance?.ScheduleRecycle(this);
+            }
+            finally { _closing = false; }
         }
     }
 
     public sealed override void Shutdown()
     {
         if (_disposing || State == ViewState.Destroyed) return;
-        if (State == ViewState.Showing) Hide();
+        // Mark disposal before user code: _Close may itself request Dispose.
         _disposing = true;
-        UIViewManager.Instance?.CancelRecycle(this);
-        try { _Dispose(); }
-        finally { base.Shutdown(); }
+        try
+        {
+            if (State == ViewState.Showing)
+            {
+                bool closeAlreadyRunning = _closing;
+                _closing = true;
+                try { if (!closeAlreadyRunning) _Close(); }
+                finally
+                {
+                    try { base.Hide(); }
+                    finally { _closing = false; }
+                }
+            }
+        }
+        finally
+        {
+            _events?.Dispose();
+            UIViewManager.Instance?.CancelRecycle(this);
+            try { _Dispose(); }
+            finally { base.Shutdown(); }
+        }
     }
 
     protected abstract void _Initialized();

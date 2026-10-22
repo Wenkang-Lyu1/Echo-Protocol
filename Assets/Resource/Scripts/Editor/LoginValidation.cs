@@ -29,6 +29,10 @@ public static class LoginValidation
             _hadFullScreen = PlayerPrefs.HasKey("EchoProtocol.FullScreen");
             _savedVolume = PlayerPrefs.GetFloat("EchoProtocol.MasterVolume",1f);
             _savedFullScreen = PlayerPrefs.GetInt("EchoProtocol.FullScreen",0) != 0;
+            // The asset builder preserves the current scene by creating previews
+            // additively; Unity requires the initial temporary scene to be saved.
+            var bootstrap = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EditorSceneManager.SaveScene(bootstrap, "Assets/ValidationBootstrap.unity");
             LoginAssetBuilder.BuildAll();
             // An empty temporary target checks routing without implementing the main city.
             var target = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

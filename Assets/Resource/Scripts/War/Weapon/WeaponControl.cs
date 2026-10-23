@@ -25,6 +25,7 @@ public class WeaponControl : GlobalControl<WeaponControl, WeaponModel>
     {
         base.OnInitialize();
         if (muzzle == null) muzzle = transform;
+        PlayerControl.Instance?.SetRecoilWeapon(this);
     }
 
     public override void Tick(float deltaTime)

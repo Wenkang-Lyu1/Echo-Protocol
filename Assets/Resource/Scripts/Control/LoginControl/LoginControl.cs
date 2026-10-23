@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public sealed class LoginControl : GlobalControl<LoginControl, LoginModel>
 {
     [Tooltip("Must be enabled in Build Settings. Empty keeps the login screen open with a message.")]
-    [SerializeField] private string gameplayScene = "Start_MainCity";
+    [SerializeField] private string gameplayScene = "Scene_Level1";
     public event Action Changed;
     private const string VolumeKey = "EchoProtocol.MasterVolume";
     private const string FullScreenKey = "EchoProtocol.FullScreen";
@@ -36,13 +36,13 @@ public sealed class LoginControl : GlobalControl<LoginControl, LoginModel>
         if (model.isLoading) return;
         if (string.IsNullOrWhiteSpace(gameplayScene) || !Application.CanStreamedLevelBeLoaded(gameplayScene))
         {
-            model.status = "请先在 LoginControl 配置已加入构建列表的游戏场景";
+            model.status = "Set a gameplay scene in LoginControl and add it to Build Settings";
             Notify();
             return;
         }
         model.settingsOpen = false;
         model.isLoading = true;
-        model.status = "正在加载…";
+        model.status = "Loading...";
         Notify();
         StartCoroutine(LoadGame());
     }
@@ -57,7 +57,7 @@ public sealed class LoginControl : GlobalControl<LoginControl, LoginModel>
         if (loading == null)
         {
             model.isLoading = false;
-            model.status = "场景加载失败，请检查构建配置";
+            model.status = "Failed to load the scene. Check Build Settings";
             flow.SetState(GameState.MainMenu);
             Notify();
             yield break;

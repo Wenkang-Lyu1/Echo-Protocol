@@ -36,11 +36,11 @@ public static class LoginValidation
             LoginAssetBuilder.BuildAll();
             // An empty temporary target checks routing without implementing the main city.
             var target = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            EditorSceneManager.SaveScene(target, "Assets/Start_MainCity.unity");
+            EditorSceneManager.SaveScene(target, "Assets/Scene_MainCity.unity");
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene("Assets/Resource/Scenes/LoginPreview.unity",true),
-                new EditorBuildSettingsScene("Assets/Start_MainCity.unity",true)
+                new EditorBuildSettingsScene("Assets/Scene_MainCity.unity",true)
             };
             EditorSceneManager.OpenScene("Assets/Resource/Scenes/LoginPreview.unity");
             EditorSettings.enterPlayModeOptionsEnabled = true;
@@ -107,14 +107,14 @@ public static class LoginValidation
                 _login.transform.Find("StartButton").GetComponent<Button>().onClick.Invoke();
                 Check(!LoginControl.Instance.model.isLoading && _login.State == ViewState.Showing &&
                     LoginControl.Instance.model.status.Length > 0,"Missing scene retains login with message");
-                scene.stringValue = "Start_MainCity"; config.ApplyModifiedPropertiesWithoutUndo();
+                scene.stringValue = "Scene_MainCity"; config.ApplyModifiedPropertiesWithoutUndo();
                 _login.transform.Find("StartButton").GetComponent<Button>().onClick.Invoke();
                 Check(LoginControl.Instance.model.isLoading,"Start button loads scene");
                 _step=3;
             }
             else if (_step == 3)
             {
-                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Start_MainCity" ||
+                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Scene_MainCity" ||
                     GameManager.Instance.State != GameState.Playing) return;
                 Check(_login.State == ViewState.Ready, "Login closes after scene load");
                 LoginControl.Instance.OpenLogin();

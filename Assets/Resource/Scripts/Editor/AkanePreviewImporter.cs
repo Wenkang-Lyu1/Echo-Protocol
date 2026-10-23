@@ -10,7 +10,18 @@ using UnityEngine.Rendering;
 /// <summary>Focused offline conversion of the documented Akane GLB. Not a general glTF importer.</summary>
 public sealed class AkanePreviewImporter
 {
-    private const string Folder = "Assets/Resource/Models/Akane/Generated";
+    private string Folder = "Assets/Resource/Models/Akane/Generated";
+    private string _character = "Akane";
+    private string _idle = "Cafe_Idle";
+
+    public static GameObject BuildStanding(string character)
+    {
+        string folder = "Assets/Resource/Models/" + character + "/Tutorial";
+        var existing = AssetDatabase.LoadAssetAtPath<GameObject>(folder + "/" + character + ".prefab");
+        if (existing != null) return existing;
+        Directory.CreateDirectory(folder);
+        return new AkanePreviewImporter { Folder = folder, _character = character, _idle = "Normal_Idle" }.Import();
+    }
     private JObject _gltf;
     private byte[] _bytes;
     private int _binary;
@@ -18,22 +29,22 @@ public sealed class AkanePreviewImporter
 
     public static GameObject Build()
     {
-        var existing = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "/Akane.prefab");
+        var existing = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Resource/Models/Akane/Generated/Akane.prefab");
         if (existing != null) return existing;
-        Directory.CreateDirectory(Folder);
+        Directory.CreateDirectory("Assets/Resource/Models/Akane/Generated");
         return new AkanePreviewImporter().Import();
     }
 
     private GameObject Import()
     {
-        _bytes = File.ReadAllBytes("Assets/Resource/Models/Akane/Akane.glb");
+        _bytes = File.ReadAllBytes("Assets/Resource/Models/" + _character + "/" + _character + ".glb");
         if (BitConverter.ToUInt32(_bytes, 0) != 0x46546C67 || BitConverter.ToInt32(_bytes, 4) != 2)
             throw new InvalidDataException("Expected glTF 2.0 GLB");
         int length = BitConverter.ToInt32(_bytes, 12);
         _gltf = JObject.Parse(System.Text.Encoding.UTF8.GetString(_bytes, 20, length));
         _binary = 20 + length + 8;
         var materials = ImportMaterials();
-        var root = new GameObject("Akane");
+        var root = new GameObject(_character);
         var nodes = (JArray)_gltf["nodes"];
         _nodes = nodes.Select((n, i) => new GameObject((string)n["name"] ?? "Node" + i).transform).ToArray();
         for (int i = 0; i < nodes.Count; i++)
@@ -110,11 +121,11 @@ public sealed class AkanePreviewImporter
         }
         var clip = ImportIdle(root.transform);
         var animation = root.AddComponent<Animation>();
-        animation.AddClip(clip, "Cafe_Idle");
+        animation.AddClip(clip, _idle);
         animation.clip = clip;
         animation.playAutomatically = true;
         clip.SampleAnimation(root, 0f);
-        var result = PrefabUtility.SaveAsPrefabAsset(root, Folder + "/Akane.prefab");
+        var result = PrefabUtility.SaveAsPrefabAsset(root, Folder + "/" + _character + ".prefab");
         UnityEngine.Object.DestroyImmediate(root);
         AssetDatabase.SaveAssets();
         return result;
@@ -148,8 +159,8 @@ public sealed class AkanePreviewImporter
 
     private AnimationClip ImportIdle(Transform root)
     {
-        var source = _gltf["animations"].First(a => (string)a["name"] == "Cafe_Idle");
-        var clip = new AnimationClip { name = "Cafe_Idle", legacy = true, wrapMode = WrapMode.Loop, frameRate = 30 };
+        var source = _gltf["animations"].First(a => (string)a["name"] == _idle);
+        var clip = new AnimationClip { name = _idle, legacy = true, wrapMode = WrapMode.Loop, frameRate = 30 };
         foreach (var channel in source["channels"])
         {
             string property = (string)channel["target"]["path"];
@@ -179,7 +190,7 @@ public sealed class AkanePreviewImporter
             }
         }
         clip.EnsureQuaternionContinuity();
-        AssetDatabase.CreateAsset(clip, Folder + "/Cafe_Idle.anim");
+        AssetDatabase.CreateAsset(clip, Folder + "/" + _idle + ".anim");
         return clip;
     }
 

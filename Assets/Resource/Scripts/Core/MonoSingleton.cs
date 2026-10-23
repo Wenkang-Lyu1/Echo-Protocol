@@ -5,7 +5,7 @@ using UnityEngine;
 //
 // Rules:
 //   1) One instance per type, reached through T.Instance.
-//   2) If the scene already has one (see the Frame object in Start_Scene),
+//   2) If the scene already has one (see the Frame object in Scene_Start),
 //      that instance wins; a second copy destroys its own GameObject.
 //   3) Instance creates the object only when the scene has none, so a
 //      prototype can be dropped on any GameObject without setup.

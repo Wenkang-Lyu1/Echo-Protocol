@@ -2,7 +2,7 @@ using UnityEngine;
 
 // ============================================================
 // GameLauncher -- the framework entry point. It lives on the Frame object
-// of Start_Scene, next to ControlRegistry.
+// of Scene_Start, next to ControlRegistry.
 //
 // It does three things:
 //   1) Keeps the whole Frame tree alive across scene loads, so the global
@@ -12,7 +12,7 @@ using UnityEngine;
 //   3) Announces the boot level with Game_Start. Nothing listens yet in a
 //      fresh project - wire a Control to it when the first level exists.
 //
-// Start_Scene is only needed once: the tree is persistent afterwards.
+// Scene_Start is only needed once: the tree is persistent afterwards.
 // ============================================================
 [DefaultExecutionOrder(-1000)]
 public class GameLauncher : MonoBehaviour

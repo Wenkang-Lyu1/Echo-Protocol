@@ -594,7 +594,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u8BBE\u7F6E"
+  m_Text: "Settings"
 --- !u!1 &2624760925127915229
 GameObject:
   m_ObjectHideFlags: 0
@@ -1029,7 +1029,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u5F00\u59CB\u6E38\u620F     \u2192"
+  m_Text: "Start Game     \u2192"
 --- !u!1 &3365851715999905772
 GameObject:
   m_ObjectHideFlags: 0
@@ -1236,7 +1236,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u9000\u51FA\u6E38\u620F"
+  m_Text: "Quit Game"
 --- !u!1 &4620134322518169123
 GameObject:
   m_ObjectHideFlags: 0
@@ -1316,7 +1316,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u6BCF\u4E00\u6B21\u56DE\u54CD\uFF0C\u90FD\u662F\u65B0\u7684\u5F00\u59CB\u3002"
+  m_Text: "Every echo is a new beginning."
 --- !u!1 &5064044351374936612
 GameObject:
   m_ObjectHideFlags: 0
@@ -1476,7 +1476,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u56DE\u54CD\u534F\u8BAE"
+  m_Text: "ECHO PROTOCOL"
 --- !u!1 &5533667582234881359
 GameObject:
   m_ObjectHideFlags: 0
@@ -2493,7 +2493,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u4E3B\u97F3\u91CF"
+  m_Text: "Volume"
 --- !u!1 &8090745519460063230
 GameObject:
   m_ObjectHideFlags: 0
@@ -2733,7 +2733,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u5168\u5C4F\u663E\u793A"
+  m_Text: "Fullscreen"
 --- !u!1 &8988023440059320213
 GameObject:
   m_ObjectHideFlags: 0

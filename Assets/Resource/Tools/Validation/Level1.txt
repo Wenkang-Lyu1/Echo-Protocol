@@ -1,0 +1,3 @@
+PASS: Unity 2021.3.5f1
+Scene built; four Atsuko Normal_Idle targets; Akane first-person camera; valid materials; player grounded; hitscan damage and cooldown; echo snapshot/deployment/cooldown/expiry; target defeat; reset; cursor capture.
+Current project Unity MCP: PASS. 866 scene objects; zero missing scripts; four Idle targets; 154 MeshColliders; one camera; echo prefab assigned. Forward input moved 1m in 0.2s; shot reduced HP 60 -> 40; replay reduced HP 40 -> 20 and expired; four targets defeated; reset restored all; released cursor blocked actions; Console errors: zero.

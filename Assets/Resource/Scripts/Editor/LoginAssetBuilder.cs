@@ -42,9 +42,9 @@ public static class LoginAssetBuilder
         Label(root.transform, "Brand", "E / P     —     PROJECT ECHO", new Vector2(.065f,.88f), new Vector2(.45f,.92f), 20, Cyan);
         Label(root.transform, "Section", "01   /   CONNECTION ESTABLISHED", new Vector2(.065f,.76f), new Vector2(.48f,.80f), 17, Cyan);
         Label(root.transform, "Title", "Echo-Protocol", new Vector2(.06f,.62f), new Vector2(.63f,.76f), 77, Color.white);
-        Label(root.transform, "Subtitle", "回响协议", new Vector2(.065f,.56f), new Vector2(.45f,.62f), 26, new Color(.76f,.84f,.87f));
+        Label(root.transform, "Subtitle", "ECHO PROTOCOL", new Vector2(.065f,.56f), new Vector2(.45f,.62f), 26, new Color(.76f,.84f,.87f));
         Image(root.transform, "TitleAccent", new Vector2(.065f,.52f), new Vector2(.11f,.524f), Orange);
-        Label(root.transform, "Tagline", "每一次回响，都是新的开始。", new Vector2(.065f,.44f), new Vector2(.46f,.49f), 20, new Color(.56f,.69f,.75f));
+        Label(root.transform, "Tagline", "Every echo is a new beginning.", new Vector2(.065f,.44f), new Vector2(.46f,.49f), 20, new Color(.56f,.69f,.75f));
 
         var raw = new GameObject("Character", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage)).GetComponent<RawImage>();
         raw.transform.SetParent(root.transform, false);
@@ -55,8 +55,8 @@ public static class LoginAssetBuilder
         Assign(preview, "output", raw);
         Label(root.transform, "CharacterIndex", "AKANE  /  01", new Vector2(.76f,.10f), new Vector2(.94f,.14f), 18, Cyan);
 
-        var start = Button(root.transform, "StartButton", "开始游戏     →", new Vector2(.065f,.285f), new Vector2(.315f,.365f), Orange, Ink, 28);
-        var quit = Button(root.transform, "QuitButton", "退出游戏", new Vector2(.065f,.18f), new Vector2(.315f,.25f), new Color(.12f,.20f,.25f), Color.white, 24);
+        var start = Button(root.transform, "StartButton", "Start Game     →", new Vector2(.065f,.285f), new Vector2(.315f,.365f), Orange, Ink, 28);
+        var quit = Button(root.transform, "QuitButton", "Quit Game", new Vector2(.065f,.18f), new Vector2(.315f,.25f), new Color(.12f,.20f,.25f), Color.white, 24);
         var settings = Button(root.transform, "SettingsButton", "≡", new Vector2(.93f,.88f), new Vector2(.97f,.95f), new Color(.15f,.25f,.30f), Cyan, 36);
         settings.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         Label(root.transform, "Status", "", new Vector2(.065f,.12f), new Vector2(.55f,.17f), 17, Orange);
@@ -67,9 +67,9 @@ public static class LoginAssetBuilder
         shade.raycastTarget = true;
         var panel = Image(shade.transform, "Window", new Vector2(.30f,.25f), new Vector2(.70f,.75f), new Color(.055f,.12f,.17f));
         Image(panel.transform, "Accent", new Vector2(0,.985f), Vector2.one, Orange);
-        Label(panel.transform, "Title", "设置", new Vector2(.08f,.77f), new Vector2(.8f,.94f), 32, Color.white);
+        Label(panel.transform, "Title", "Settings", new Vector2(.08f,.77f), new Vector2(.8f,.94f), 32, Color.white);
         var close = Button(panel.transform, "CloseButton", "×", new Vector2(.86f,.80f), new Vector2(.96f,.95f), Color.clear, Color.white, 32);
-        Label(panel.transform, "VolumeLabel", "主音量", new Vector2(.08f,.58f), new Vector2(.40f,.70f), 23, Cyan);
+        Label(panel.transform, "VolumeLabel", "Volume", new Vector2(.08f,.58f), new Vector2(.40f,.70f), 23, Cyan);
         var slider = Image(panel.transform, "VolumeSlider", new Vector2(.10f,.45f), new Vector2(.90f,.51f), new Color(.2f,.3f,.35f)).gameObject.AddComponent<Slider>();
         slider.GetComponent<Image>().raycastTarget = true;
         var handle = Image(slider.transform, "Handle", Vector2.zero, Vector2.one, Orange);
@@ -81,7 +81,7 @@ public static class LoginAssetBuilder
         var toggle = Image(panel.transform, "FullScreenToggle", new Vector2(.10f,.21f), new Vector2(.90f,.34f), Color.clear).gameObject.AddComponent<Toggle>();
         var box = Image(toggle.transform, "Box", new Vector2(0,.12f), new Vector2(.08f,.88f), new Color(.2f,.3f,.35f));
         var tick = Image(box.transform, "Check", new Vector2(.18f,.18f), new Vector2(.82f,.82f), Orange);
-        Label(toggle.transform, "Label", "全屏显示", new Vector2(.14f,0), Vector2.one, 23, Color.white);
+        Label(toggle.transform, "Label", "Fullscreen", new Vector2(.14f,0), Vector2.one, 23, Color.white);
         toggle.targetGraphic = box;
         toggle.graphic = tick;
         toggle.GetComponent<Image>().raycastTarget = true;

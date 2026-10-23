@@ -22,6 +22,7 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
     [SerializeField] private Transform cameraPivot;
     [SerializeField] private float minPitch = -80f;
     [SerializeField] private float maxPitch = 80f;
+    [SerializeField] private WeaponControl recoilWeapon;
 
     private CharacterController _cc;
     private float _verticalVelocity;
@@ -29,6 +30,7 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
     private float _invincibleTimer;
 
     public Transform CameraPivot => cameraPivot;
+    public void SetRecoilWeapon(WeaponControl weapon) => recoilWeapon = weapon;
 
     // ---- IDamageable (see DamageSystem) ----
     public float Hp => model.hp;
@@ -55,7 +57,7 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         if (_invincibleTimer > 0f) _invincibleTimer -= deltaTime;
 
         HandleLook();
-        HandleMove();
+        HandleMove(deltaTime);
         HandleCrouch();
 
         if (!_cc.isGrounded) _verticalVelocity -= gravity * deltaTime;
@@ -87,12 +89,12 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
 
                 // Recoil accumulation.
-        var recoil = WeaponControl.Instance?.ConsumeRecoil() ?? Vector3.zero;
+        var recoil = recoilWeapon != null ? recoilWeapon.ConsumeRecoil() : Vector3.zero;
         if (recoil != Vector3.zero)
             cameraPivot.localRotation *= Quaternion.Euler(-recoil.y * 2f, recoil.x * 2f, 0f);
     }
 
-    private void HandleMove()
+    private void HandleMove(float deltaTime)
     {
         var input = InputManager.Instance;
         var move = input != null ? input.MoveInput : Vector2.zero;
@@ -103,7 +105,7 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         if (model.isCrouching) speed = crouchSpeed;
 
         if (worldMove.sqrMagnitude > 1f) worldMove.Normalize();
-        _cc.Move(worldMove * speed * Time.deltaTime);
+        _cc.Move(worldMove * speed * deltaTime);
 
         model.isSprinting = input != null && input.SprintHeld && !model.isCrouching;
     }
@@ -140,5 +142,16 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
     public void Heal(float amount)
     {
         model.hp = Mathf.Min(model.maxHp, model.hp + amount);
+    }
+
+    public void ResetPose(Vector3 position, Quaternion rotation)
+    {
+        _cc.enabled = false;
+        transform.SetPositionAndRotation(position, rotation);
+        _cc.enabled = true;
+        _verticalVelocity = _pitch = 0;
+        cameraPivot.localRotation = Quaternion.identity;
+        model.position = position;
+        model.rotation = rotation;
     }
 }

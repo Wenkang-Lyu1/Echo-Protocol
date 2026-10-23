@@ -37,6 +37,11 @@ public class InputManager : MonoSingleton<InputManager>
     public bool AimHeld { get; private set; }
     public bool SprintHeld { get; private set; }
     public bool CrouchHeld { get; private set; }
+    public bool EchoPressed { get; private set; }
+    public bool PausePressed { get; private set; }
+    public bool RestartPressed { get; private set; }
+    public bool FirePressed { get; private set; }
+    private bool _gameplayEnabled = true;
     public float LookSensitivity => lookSensitivity;
 
     // Reflection handles so we never reference the package types directly.
@@ -183,6 +188,7 @@ public class InputManager : MonoSingleton<InputManager>
 
     public void EnableGameplay(bool enable)
     {
+        _gameplayEnabled = enable;
         if (_playerInput == null) return;
         var actionsProp = _playerInput.GetType().GetProperty("actions");
         if (actionsProp == null) return;
@@ -191,6 +197,29 @@ public class InputManager : MonoSingleton<InputManager>
 
         var method = actions.GetType().GetMethod(enable ? "Enable" : "Disable");
         method?.Invoke(actions, null);
+    }
+
+    private void Update()
+    {
+#if ENABLE_LEGACY_INPUT_MANAGER
+        PausePressed = Input.GetKeyDown(KeyCode.Escape);
+        RestartPressed = Input.GetKeyDown(KeyCode.R);
+        FirePressed = Input.GetMouseButtonDown(0);
+        EchoPressed = _gameplayEnabled && Input.GetKeyDown(KeyCode.E);
+        // This project ships without an Input System action asset. Keep keyboard
+        // input usable while preserving the configured action-map path.
+        if (_actionMap == null)
+        {
+            MoveInput = _gameplayEnabled ? new Vector2(
+                (Input.GetKey(KeyCode.D) ? 1 : 0) - (Input.GetKey(KeyCode.A) ? 1 : 0),
+                (Input.GetKey(KeyCode.W) ? 1 : 0) - (Input.GetKey(KeyCode.S) ? 1 : 0)) : Vector2.zero;
+            LookInput = _gameplayEnabled ? new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * .04f : Vector2.zero;
+            FireHeld = _gameplayEnabled && Input.GetMouseButton(0);
+            AimHeld = _gameplayEnabled && Input.GetMouseButton(1);
+            SprintHeld = _gameplayEnabled && Input.GetKey(KeyCode.LeftShift);
+            CrouchHeld = _gameplayEnabled && Input.GetKey(KeyCode.LeftControl);
+        }
+#endif
     }
 
 }

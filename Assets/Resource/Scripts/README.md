@@ -163,12 +163,12 @@ EventCenter.Instance.RemoveListener(GameEvent.Player_Died, OnPlayerDied);
 
 `GameEvent` 用 `模块_动作` 命名；一次派发期间再次派发的事件会延后到下一帧，避免重入。
 
-## 八、场景：Start_Scene 的 Frame
+## 八、场景：Scene_Start 的 Frame
 
-框架能力全部挂在 `Start_Scene` 的 **Frame** 下面，一个节点一项能力：
+框架能力全部挂在 `Scene_Start` 的 **Frame** 下面，一个节点一项能力：
 
 ```
-Start_Scene
+Scene_Start
 ├── Main Camera
 ├── Directional Light
 └── Frame                     ← 框架根，运行后整棵树常驻
@@ -194,7 +194,9 @@ Start_Scene
 ## 十、已知限制
 
 1. 无 Unity 编辑器环境下只做编译级校验，玩法数值需在编辑器里调
-2. Input System 用反射接入，未装包时输入为空但不报错
+2. Input System 用反射接入；未配置动作资产时，InputManager 使用 Legacy Input 提供键鼠输入
 3. Echo 残影的 NavMeshAgent 在狭窄地形可能穿墙，建议 CharacterController
 4. 伤害管线默认不结算：`WeaponControl` 只广播 `Weapon_Fired`，
    需要伤害时把同一个 `HitArgs` 再交给 `DamageSystem.Instance.Dispatch(hit)`
+
+新手试玩入口为 `Assets/Scenes/Scene_Level1.unity`，可直接 Play。该关卡使用独立 TutorialControl 结算射击与回声伤害；操作和实现说明见 `Assets/Resource/AIDoc/L-新手试玩关卡.md`。

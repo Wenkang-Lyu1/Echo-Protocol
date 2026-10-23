@@ -19,7 +19,7 @@ public sealed class U_Login_MainView : UIViewBase
         if (startButton == null || quitButton == null || settingsButton == null ||
             closeSettingsButton == null || settingsRoot == null || volumeSlider == null ||
             fullScreenToggle == null || statusText == null || modelPreview == null)
-            throw new System.InvalidOperationException(name + ": 登录界面组件引用不完整");
+            throw new System.InvalidOperationException(name + ": Login UI component references are incomplete");
         _control = LoginControl.Instance;
     }
 

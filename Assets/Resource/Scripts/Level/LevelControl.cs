@@ -8,7 +8,7 @@ using UnityEngine;
 //   2) Wave scheduling (cooperates with EnemyControl).
 //   3) Level objective evaluation.
 // ============================================================
-public class LevelControl : GlobalControl<LevelControl, LevelModel>
+public partial class LevelControl : GlobalControl<LevelControl, LevelModel>
 {
     [SerializeField] private WaveConfig[] waves;
     [SerializeField] private EnemyControl[] enemyPrefabs;
@@ -24,6 +24,7 @@ public class LevelControl : GlobalControl<LevelControl, LevelModel>
     protected override void OnInitialize()
     {
         base.OnInitialize();
+        if (usePreparation) { InitializePreparation(); return; }
         EventCenter.Instance.AddListener(GameEvent.Enemy_Die, OnEnemyDied);
     }
 
@@ -34,6 +35,7 @@ public class LevelControl : GlobalControl<LevelControl, LevelModel>
 
     public void StartLevel()
     {
+        if (usePreparation) { RestartPreparation(); return; }
         model.Reset();
         _waveIndex = 0;
         _spawnedInWave = 0;
@@ -58,6 +60,7 @@ public class LevelControl : GlobalControl<LevelControl, LevelModel>
 
     public override void Tick(float deltaTime)
     {
+        if (usePreparation) { TickPreparation(deltaTime); return; }
         if (!_active) return;
 
         var wave = waves[_waveIndex];
@@ -127,6 +130,7 @@ public class LevelControl : GlobalControl<LevelControl, LevelModel>
 
     private void OnEnemyDied(GameEventArgs args)
     {
+        if (usePreparation) return;
         model.aliveEnemyCount = Mathf.Max(0, model.aliveEnemyCount - 1);
         model.killCount++;
 

@@ -12,7 +12,7 @@ using UnityEngine.UI;
 /// <summary>Builds an editable, serialized tutorial scene from the imported Kenney assets.</summary>
 public static class TutorialLevelBuilder
 {
-    public const string ScenePath = "Assets/Scenes/Scene_Level1.unity";
+    public const string ScenePath = "Assets/Scenes/Scene_Tutorial.unity";
     private const string Kit = "Assets/Resource/Models/Environment/KenneySpaceStation/Prefabs/";
     private const string Generated = "Assets/Resource/Level1";
     private static readonly Color Cyan = new Color(.22f, .86f, 1);
@@ -20,7 +20,7 @@ public static class TutorialLevelBuilder
     private static Material _cyan, _orange, _dark;
     private static Transform _environment;
 
-    [MenuItem("Tools/Echo Protocol/Level 1/Rebuild Tutorial Scene")]
+    [MenuItem("Tools/Echo Protocol/Tutorial/Rebuild Tutorial Scene")]
     public static void BuildMenu()
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -258,21 +258,55 @@ public static class TutorialLevelBuilder
         Panel(canvas.transform, "Briefing", new Vector2(.025f, .70f), new Vector2(.28f, .965f));
         Label(canvas.transform, "Title", "E / P   ·   ECHO TRAINING", new Vector2(.04f, .90f), new Vector2(.28f, .945f), 27, Cyan);
         Label(canvas.transform, "Subtitle", "LEVEL 01   /   TUTORIAL", new Vector2(.04f, .85f), new Vector2(.28f, .89f), 17, Color.white);
-        var objectives = Label(canvas.transform, "Objectives", "", new Vector2(.04f, .715f), new Vector2(.275f, .84f), 19, Color.white);
         Panel(canvas.transform, "Echo panel", new Vector2(.025f, .03f), new Vector2(.44f, .14f));
-        var echo = Label(canvas.transform, "EchoStatus", "", new Vector2(.04f, .045f), new Vector2(.43f, .13f), 20, Cyan);
         Panel(canvas.transform, "Target panel", new Vector2(.80f, .89f), new Vector2(.975f, .965f));
-        var targets = Label(canvas.transform, "Targets", "", new Vector2(.82f, .90f), new Vector2(.97f, .955f), 22, Orange);
         Label(canvas.transform, "Controls", "WASD Move   /   Mouse Look   /   LMB Shoot\nE Echo   ·   ESC Release cursor   ·   R Reset", new Vector2(.58f, .035f), new Vector2(.975f, .12f), 18, Color.white).alignment = TextAnchor.MiddleRight;
-        var message = Label(canvas.transform, "Message", "", new Vector2(.30f, .55f), new Vector2(.70f, .73f), 32, Cyan);
-        message.alignment = TextAnchor.MiddleCenter;
+        // Fixed copy and preview values are authored on UGUI Text components.
+        Label(canvas.transform, "MoveObjective", "WASD Move", new Vector2(0.062f, 0.8f), new Vector2(0.275f, 0.84f), 19, Color.white);
+        Label(canvas.transform, "TargetsObjective", "LMB Shoot training targets", new Vector2(0.062f, 0.757f), new Vector2(0.275f, 0.797f), 19, Color.white);
+        Label(canvas.transform, "EchoObjective", "E Create an echo", new Vector2(0.062f, 0.714f), new Vector2(0.275f, 0.754f), 19, Color.white);
+        var moveComplete = Label(canvas.transform, "MoveComplete", "✓", new Vector2(0.04f, 0.8f), new Vector2(0.06f, 0.84f), 19, Cyan);
+        moveComplete.gameObject.SetActive(false);
+        Assign(hud, "moveComplete", moveComplete.gameObject);
+        var targetsComplete = Label(canvas.transform, "TargetsComplete", "✓", new Vector2(0.04f, 0.757f), new Vector2(0.06f, 0.797f), 19, Cyan);
+        targetsComplete.gameObject.SetActive(false);
+        Assign(hud, "targetsComplete", targetsComplete.gameObject);
+        var echoComplete = Label(canvas.transform, "EchoComplete", "✓", new Vector2(0.04f, 0.714f), new Vector2(0.06f, 0.754f), 19, Cyan);
+        echoComplete.gameObject.SetActive(false);
+        Assign(hud, "echoComplete", echoComplete.gameObject);
+        Label(canvas.transform, "EchoLabel", "E / Echoes", new Vector2(0.04f, 0.088f), new Vector2(0.112f, 0.13f), 20, Cyan);
+        var echoCount = Label(canvas.transform, "EchoCount", "0", new Vector2(0.115f, 0.088f), new Vector2(0.13f, 0.13f), 20, Cyan);
+        Assign(hud, "echoCount", echoCount);
+        Label(canvas.transform, "EchoLimit", "/3", new Vector2(0.13f, 0.088f), new Vector2(0.155f, 0.13f), 20, Cyan);
+        var readyStatus = Label(canvas.transform, "ReadyStatus", "Ready", new Vector2(0.18f, 0.088f), new Vector2(0.43f, 0.13f), 20, Cyan);
+        Assign(hud, "readyStatus", readyStatus.gameObject);
+        var cooldownSeconds = Label(canvas.transform, "CooldownSeconds", "0.0", new Vector2(0.18f, 0.088f), new Vector2(0.22f, 0.13f), 20, Cyan);
+        cooldownSeconds.gameObject.SetActive(false);
+        Assign(hud, "cooldownSeconds", cooldownSeconds);
+        var cooldownStatus = Label(canvas.transform, "CooldownStatus", "s until ready", new Vector2(0.22f, 0.088f), new Vector2(0.43f, 0.13f), 20, Cyan);
+        cooldownStatus.gameObject.SetActive(false);
+        Assign(hud, "cooldownStatus", cooldownStatus.gameObject);
+        Label(canvas.transform, "ReplayLabel", "Replay last", new Vector2(0.04f, 0.045f), new Vector2(0.108f, 0.087f), 20, Cyan);
+        var recordedSeconds = Label(canvas.transform, "RecordedSeconds", "0.0", new Vector2(0.11f, 0.045f), new Vector2(0.15f, 0.087f), 20, Cyan);
+        Assign(hud, "recordedSeconds", recordedSeconds);
+        Label(canvas.transform, "ReplayDescription", "s of movement / shooting", new Vector2(0.15f, 0.045f), new Vector2(0.43f, 0.087f), 20, Cyan);
+        Label(canvas.transform, "TargetsLabel", "Targets", new Vector2(0.82f, 0.9f), new Vector2(0.89f, 0.955f), 22, Orange);
+        var targetCount = Label(canvas.transform, "TargetCount", "0 / 4", new Vector2(0.89f, 0.9f), new Vector2(0.97f, 0.955f), 22, Orange);
+        Assign(hud, "targetCount", targetCount);
+        var cursorMessage = Label(canvas.transform, "CursorMessage", "Cursor released\nClick to resume", new Vector2(0.3f, 0.55f), new Vector2(0.7f, 0.73f), 32, Cyan);
+        cursorMessage.alignment = TextAnchor.MiddleCenter;
+        cursorMessage.gameObject.SetActive(false);
+        Assign(hud, "cursorMessage", cursorMessage.gameObject);
+        var completeMessage = Label(canvas.transform, "CompleteMessage", "Training complete\nR Restart", new Vector2(0.3f, 0.55f), new Vector2(0.7f, 0.73f), 32, Cyan);
+        completeMessage.alignment = TextAnchor.MiddleCenter;
+        completeMessage.gameObject.SetActive(false);
+        Assign(hud, "completeMessage", completeMessage.gameObject);
         var crosshair = new GameObject("Crosshair", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
         crosshair.transform.SetParent(canvas.transform, false);
         crosshair.rectTransform.anchorMin = crosshair.rectTransform.anchorMax = new Vector2(.5f, .5f);
         crosshair.rectTransform.anchoredPosition = Vector2.zero; crosshair.rectTransform.sizeDelta = new Vector2(5, 5);
         crosshair.raycastTarget = false;
-        Assign(hud, "objectives", objectives); Assign(hud, "echoStatus", echo);
-        Assign(hud, "targetStatus", targets); Assign(hud, "message", message); Assign(hud, "crosshair", crosshair);
+        Assign(hud, "crosshair", crosshair);
         return hud;
     }
     private static void Panel(Transform parent, string name, Vector2 min, Vector2 max)

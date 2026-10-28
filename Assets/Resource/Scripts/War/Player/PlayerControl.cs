@@ -25,8 +25,7 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
     [SerializeField] private WeaponControl recoilWeapon;
 
     private CharacterController _cc;
-    private float _verticalVelocity;
-    private float _pitch;
+    private CharacterMotor _motor;
     private float _invincibleTimer;
 
     public Transform CameraPivot => cameraPivot;
@@ -46,6 +45,8 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         if (cameraPivot == null)
             cameraPivot = transform.Find("CameraPivot") ?? transform;
 
+        _motor = CreateMotor(gameObject, cameraPivot);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -56,14 +57,12 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
 
         if (_invincibleTimer > 0f) _invincibleTimer -= deltaTime;
 
-        HandleLook();
-        HandleMove(deltaTime);
-        HandleCrouch();
-
-        if (!_cc.isGrounded) _verticalVelocity -= gravity * deltaTime;
-        else if (_verticalVelocity < 0f) _verticalVelocity = -1f;
-
-        _cc.Move(Vector3.up * _verticalVelocity * deltaTime);
+        _motor.Move(deltaTime);
+        model.isCrouching = _motor.Crouching;
+        model.isSprinting = _motor.Sprinting;
+        var recoil = recoilWeapon != null ? recoilWeapon.ConsumeRecoil() : Vector3.zero;
+        if (recoil != Vector3.zero)
+            cameraPivot.localRotation *= Quaternion.Euler(-recoil.y * 2f, recoil.x * 2f, 0f);
 
                 // Sync model position.
         model.position = transform.position;
@@ -76,46 +75,14 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         });
     }
 
-    private void HandleLook()
+    public CharacterMotor CreateMotor(GameObject actor, Transform pivot)
     {
-        var input = InputManager.Instance;
-        if (input == null) return;
-
-        var look = input.LookInput * (input.LookSensitivity * 100f);
-        transform.Rotate(Vector3.up * look.x);
-
-        _pitch -= look.y;
-        _pitch = Mathf.Clamp(_pitch, minPitch, maxPitch);
-        cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
-
-                // Recoil accumulation.
-        var recoil = recoilWeapon != null ? recoilWeapon.ConsumeRecoil() : Vector3.zero;
-        if (recoil != Vector3.zero)
-            cameraPivot.localRotation *= Quaternion.Euler(-recoil.y * 2f, recoil.x * 2f, 0f);
-    }
-
-    private void HandleMove(float deltaTime)
-    {
-        var input = InputManager.Instance;
-        var move = input != null ? input.MoveInput : Vector2.zero;
-        var worldMove = transform.forward * move.y + transform.right * move.x;
-
-        var speed = walkSpeed;
-        if (input != null && input.SprintHeld && !model.isCrouching) speed = sprintSpeed;
-        if (model.isCrouching) speed = crouchSpeed;
-
-        if (worldMove.sqrMagnitude > 1f) worldMove.Normalize();
-        _cc.Move(worldMove * speed * deltaTime);
-
-        model.isSprinting = input != null && input.SprintHeld && !model.isCrouching;
-    }
-
-    private void HandleCrouch()
-    {
-        var input = InputManager.Instance;
-        if (input == null) return;
-        model.isCrouching = input.CrouchHeld;
-        _cc.height = model.isCrouching ? 1.2f : 1.8f;
+        var motor = actor.GetComponent<CharacterMotor>() ?? actor.AddComponent<CharacterMotor>();
+        motor.walkSpeed = walkSpeed; motor.sprintSpeed = sprintSpeed; motor.crouchSpeed = crouchSpeed;
+        motor.gravity = gravity; motor.minPitch = minPitch; motor.maxPitch = maxPitch;
+        motor.pivot = pivot;
+        motor.ResetMotion();
+        return motor;
     }
 
         // ---- Public Interface ----
@@ -149,8 +116,8 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         _cc.enabled = false;
         transform.SetPositionAndRotation(position, rotation);
         _cc.enabled = true;
-        _verticalVelocity = _pitch = 0;
         cameraPivot.localRotation = Quaternion.identity;
+        _motor.ResetMotion();
         model.position = position;
         model.rotation = rotation;
     }

@@ -10,7 +10,7 @@ using UnityEngine;
 //   4) Drives EchoPlayback.
 //   5) Replicates firing decisions (core of the repeat-fire tactic).
 // ============================================================
-public class EchoControl : GlobalControl<EchoControl, EchoModel>
+public partial class EchoControl : GlobalControl<EchoControl, EchoModel>
 {
         [Header("Configuration")]
     [SerializeField] private float sampleRate = 20f;
@@ -33,8 +33,13 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
     {
         base.OnInitialize();
         _fixedStep = 1f / Mathf.Max(1f, sampleRate);
-        if (muzzle == null && PlayerControl.Instance != null)
-            muzzle = PlayerControl.Instance.CameraPivot;
+        if (muzzle == null)
+        {
+            // A late-registered level can initialize before the scene player's Awake.
+            // Prefer the explicit body reference instead of creating a second singleton.
+            var player = _body != null ? _body : PlayerControl.Instance;
+            if (player != null) muzzle = player.CameraPivot;
+        }
 
         if (echoPrefab != null)
             _pool = new ObjectPool<EchoPlayback>(echoPrefab, poolSize);
@@ -53,6 +58,7 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     public override void Tick(float deltaTime)
     {
+        if (model.isPreparing) { TickPreparation(deltaTime); return; }
         if (model.isRecording)
             RecordTick();
 
@@ -126,6 +132,7 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     private void OnRecordStart(GameEventArgs args)
     {
+        if (model.isPreparing) return;
         if (model.isRecording) return;
         model.isRecording = true;
         model.recordDuration = 0f;
@@ -138,6 +145,7 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     private void OnRecordEnd(GameEventArgs args)
     {
+        if (model.isPreparing) return;
         StopRecording();
     }
 
@@ -163,6 +171,7 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     public bool TryDeploy(Vector3 deployPosition)
     {
+        if (model.isPreparing) return false;
         if (model.FrameCount == 0)
         {
                         DispatchFail("No recording data");
@@ -290,10 +299,10 @@ public class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     public override void ResetState()
     {
-        base.ResetState();
+        ClearPreparation();
         foreach (var e in model.activeEchoes)
             if (e != null) Destroy(e.gameObject);
-        model.activeEchoes.Clear();
+        base.ResetState();
         _playbackTime = 0f;
         _fireCursor = 0;
     }

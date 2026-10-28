@@ -1,0 +1,33 @@
+Scene_Tutorial regression / Unity 2021.3.5f1 / isolated batchmode
+2026-10-29
+
+LEVEL1_CHECK: Four Atsuko targets bound
+LEVEL1_CHECK: One first person camera
+LEVEL1_CHECK: Player collider excluded from all shot raycasts
+LEVEL1_CHECK: Standing idle animation plays on Atsuko
+LEVEL1_CHECK: Standing idle animation plays on Atsuko
+LEVEL1_CHECK: Standing idle animation plays on Akane
+LEVEL1_CHECK: Standing idle animation plays on Atsuko
+LEVEL1_CHECK: Standing idle animation plays on Atsuko
+LEVEL1_CHECK: Materials resolve
+LEVEL1_CHECK: Player grounded on Kenney floor
+LEVEL1_CHECK: Floor supports player
+LEVEL1_CHECK: Forward movement follows input and delta time
+LEVEL1_CHECK: Primary fire accepted
+LEVEL1_CHECK: Hitscan applies 20 damage to target
+LEVEL1_CHECK: Fire interval enforced
+LEVEL1_CHECK: E action creates Akane echo from recording
+LEVEL1_CHECK: Echo cooldown enforced
+LEVEL1_CHECK: Echo count updates
+LEVEL1_CHECK: Echo expires and cleans up
+LEVEL1_CHECK: Echo replays the recorded shot and applies damage once
+LEVEL1_CHECK: Defeated target disables collision
+LEVEL1_CHECK: Defeated target disables collision
+LEVEL1_CHECK: Defeated target disables collision
+LEVEL1_CHECK: Defeated target disables collision
+LEVEL1_CHECK: Target progress reaches four
+LEVEL1_CHECK: R action clears progress and echoes
+LEVEL1_CHECK: R action restores targets
+LEVEL1_CHECK: Released cursor blocks shooting and echo creation
+LEVEL1_CHECK: Fresh recording creates a visible echo after reset
+TUTORIAL_REGRESSION_OK

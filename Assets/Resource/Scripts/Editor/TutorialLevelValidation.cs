@@ -15,11 +15,19 @@ public static class TutorialLevelValidation
     private static Vector3 _initial;
     public static void RunBatch()
     {
+        Begin(true);
+    }
+    public static void RunExistingBatch()
+    {
+        Begin(false);
+    }
+    private static void Begin(bool rebuild)
+    {
         if (!Path.GetFullPath(Application.dataPath).StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Use a disposable project under the OS temporary directory.");
         try
         {
-            TutorialLevelBuilder.Build();
+            if (rebuild) TutorialLevelBuilder.Build();
             EditorSceneManager.OpenScene(TutorialLevelBuilder.ScenePath);
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
@@ -62,6 +70,10 @@ public static class TutorialLevelValidation
             }
             else if (_step == 1 && EditorApplication.timeSinceStartup >= _until)
             {
+                // Batch frames can be shorter than CharacterController.minMoveDistance.
+                // Use fixed simulation steps for the ground-contact assertion.
+                typeof(InputManager).GetProperty("MoveInput").SetValue(InputManager.Instance, Vector2.zero);
+                for (int i = 0; i < 30; i++) PlayerControl.Instance.Tick(.02f);
                 Check(PlayerControl.Instance.GetComponent<CharacterController>().isGrounded, "Player grounded on Kenney floor");
                 Check(Mathf.Abs(PlayerControl.Instance.transform.position.y - _initial.y) < .2f, "Floor supports player");
                 typeof(InputManager).GetProperty("MoveInput").SetValue(InputManager.Instance, Vector2.up);

@@ -44,6 +44,11 @@ public struct EchoFireEvent
 [Serializable]
 public class EchoModel : ModelBase
 {
+    public bool isPreparing;
+    public float cursor;
+    public float selectedSpeed = 1f;
+    public float EffectiveSpeed => isPreparing && isRecording ? selectedSpeed : 0f;
+    public readonly List<EchoSegment> segments = new List<EchoSegment>();
     public bool isRecording;
     public bool isPlaying;
     public float recordDuration;
@@ -59,6 +64,10 @@ public class EchoModel : ModelBase
 
     public override void Reset()
     {
+        isPreparing = false;
+        cursor = 0;
+        selectedSpeed = 1;
+        segments.Clear();
         isRecording = false;
         isPlaying = false;
         recordDuration = 0f;
@@ -67,4 +76,13 @@ public class EchoModel : ModelBase
         fireEvents.Clear();
         activeEchoes.Clear();
     }
+}
+
+[Serializable]
+public sealed class EchoSegment
+{
+    public string id;
+    public float startTime;
+    public float duration;
+    public EchoFrame[] frames;
 }

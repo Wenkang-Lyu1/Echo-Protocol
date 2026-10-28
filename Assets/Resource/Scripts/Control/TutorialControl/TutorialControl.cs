@@ -37,7 +37,7 @@ public sealed class TutorialControl : GlobalControl<TutorialControl, TutorialMod
 
     private void Start()
     {
-        // Supports opening Scene_Level1 directly, and an already initialized Frame.
+        // Supports opening Scene_Tutorial directly, and an already initialized Frame.
         ControlRegistry.Instance.InitializeAll();
     }
 

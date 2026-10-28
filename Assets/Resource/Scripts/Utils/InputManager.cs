@@ -20,6 +20,7 @@ public class InputProfile : ScriptableObject
     public string aim = "Aim";
     public string reload = "Reload";
     public string record = "Record";
+    public string echoSpeed = "EchoSpeed";
     public string sprint = "Sprint";
     public string crouch = "Crouch";
     public string pause = "Pause";
@@ -38,10 +39,12 @@ public class InputManager : MonoSingleton<InputManager>
     public bool SprintHeld { get; private set; }
     public bool CrouchHeld { get; private set; }
     public bool EchoPressed { get; private set; }
+    public bool EchoSpeedPressed { get; private set; }
     public bool PausePressed { get; private set; }
     public bool RestartPressed { get; private set; }
     public bool FirePressed { get; private set; }
     private bool _gameplayEnabled = true;
+    private bool _pendingEcho, _pendingEchoSpeed;
     public float LookSensitivity => lookSensitivity;
 
     // Reflection handles so we never reference the package types directly.
@@ -123,7 +126,7 @@ public class InputManager : MonoSingleton<InputManager>
                 eventType = GameEvent.Weapon_Reload
             }));
         Bind(profile.record,
-            null, null,
+            null, c => _pendingEcho = true,
             c =>
             {
                 EventCenter.Instance.Dispatch(new GameEventArgs
@@ -133,6 +136,7 @@ public class InputManager : MonoSingleton<InputManager>
                         : GameEvent.Echo_RecordEnd
                 });
             });
+        Bind(profile.echoSpeed, null, c => _pendingEchoSpeed = true, null);
         Bind(profile.pause,
             null, null,
             c => EventCenter.Instance.Dispatch(new GameEventArgs
@@ -201,11 +205,15 @@ public class InputManager : MonoSingleton<InputManager>
 
     private void Update()
     {
+        EchoPressed = _gameplayEnabled && _pendingEcho;
+        EchoSpeedPressed = _gameplayEnabled && _pendingEchoSpeed;
+        _pendingEcho = _pendingEchoSpeed = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
         PausePressed = Input.GetKeyDown(KeyCode.Escape);
         RestartPressed = Input.GetKeyDown(KeyCode.R);
         FirePressed = Input.GetMouseButtonDown(0);
-        EchoPressed = _gameplayEnabled && Input.GetKeyDown(KeyCode.E);
+        EchoPressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.E);
+        EchoSpeedPressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.T);
         // This project ships without an Input System action asset. Keep keyboard
         // input usable while preserving the configured action-map path.
         if (_actionMap == null)

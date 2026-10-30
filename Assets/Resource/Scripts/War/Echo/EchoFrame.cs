@@ -46,8 +46,13 @@ public class EchoModel : ModelBase
 {
     public bool isPreparing;
     public float cursor;
+    public float levelDuration = 240f;
+    public int echoLimit = int.MaxValue;
+    public int RemainingEchoes => Mathf.Max(0, echoLimit - segments.Count - (isRecording ? 1 : 0));
+    public bool CanCreateEcho => isPreparing && !isRecording && RemainingEchoes > 0 && cursor < levelDuration;
     public float selectedSpeed = 1f;
-    public float EffectiveSpeed => isPreparing && isRecording ? selectedSpeed : 0f;
+    public bool isPreviewPlaying;
+    public float EffectiveSpeed => isPreparing && (isRecording || isPreviewPlaying) ? selectedSpeed : 0f;
     public readonly List<EchoSegment> segments = new List<EchoSegment>();
     public bool isRecording;
     public bool isPlaying;
@@ -65,8 +70,10 @@ public class EchoModel : ModelBase
     public override void Reset()
     {
         isPreparing = false;
+        isPreviewPlaying = false;
         cursor = 0;
         selectedSpeed = 1;
+        echoLimit = int.MaxValue;
         segments.Clear();
         isRecording = false;
         isPlaying = false;
@@ -85,4 +92,5 @@ public sealed class EchoSegment
     public float startTime;
     public float duration;
     public EchoFrame[] frames;
+    public EchoFireEvent[] shots = new EchoFireEvent[0];
 }

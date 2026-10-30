@@ -111,6 +111,13 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         model.hp = Mathf.Min(model.maxHp, model.hp + amount);
     }
 
+    public override void ResetState()
+    {
+        base.ResetState();
+        _invincibleTimer = 0;
+        if (_motor != null) _motor.ResetMotion();
+    }
+
     public void ResetPose(Vector3 position, Quaternion rotation)
     {
         _cc.enabled = false;

@@ -22,6 +22,15 @@ public sealed class AkanePreviewImporter
         Directory.CreateDirectory(folder);
         return new AkanePreviewImporter { Folder = folder, _character = character, _idle = "Normal_Idle" }.Import();
     }
+
+    public static GameObject BuildCombat(string character, string idle)
+    {
+        string folder = "Assets/Resource/Models/" + character + "/Combat";
+        var existing = AssetDatabase.LoadAssetAtPath<GameObject>(folder + "/" + character + ".prefab");
+        if (existing != null) return existing;
+        Directory.CreateDirectory(folder);
+        return new AkanePreviewImporter { Folder = folder, _character = character, _idle = idle }.Import();
+    }
     private JObject _gltf;
     private byte[] _bytes;
     private int _binary;

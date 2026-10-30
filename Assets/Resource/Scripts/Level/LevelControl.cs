@@ -60,7 +60,7 @@ public partial class LevelControl : GlobalControl<LevelControl, LevelModel>
 
     public override void Tick(float deltaTime)
     {
-        if (usePreparation) { TickPreparation(deltaTime); return; }
+        if (usePreparation) { TickFormalLevel(deltaTime); return; }
         if (!_active) return;
 
         var wave = waves[_waveIndex];

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80321af930c758c4f844116264f8e2d9, type: 3}
+  m_Name: Level_1
+  m_EditorClassIdentifier:
+  levelId: level_1
+  durationSeconds: 240
+  echoLimit: 5
+  nests:
+  - nestId: nest_a
+    firstWaveTimeSeconds: 0
+    waves:
+    - enemyCount: 3
+      delayAfterPreviousClearSeconds: 0
+    - enemyCount: 5
+      delayAfterPreviousClearSeconds: 10
+    - enemyCount: 8
+      delayAfterPreviousClearSeconds: 15
+  - nestId: nest_b
+    firstWaveTimeSeconds: 30
+    waves:
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 0
+    - enemyCount: 4
+      delayAfterPreviousClearSeconds: 12

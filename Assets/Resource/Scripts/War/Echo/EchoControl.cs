@@ -58,6 +58,7 @@ public partial class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     public override void Tick(float deltaTime)
     {
+        if (_combatPlayback) return;
         if (model.isPreparing) { TickPreparation(deltaTime); return; }
         if (model.isRecording)
             RecordTick();

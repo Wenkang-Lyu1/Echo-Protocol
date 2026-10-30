@@ -1,22 +1,26 @@
-using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class U_Level_MainView : UIViewBase
 {
     [SerializeField] private Text status;
+    [SerializeField] private Text stageTitle;
+    [SerializeField] private GameObject preparationHelp, combatHelp;
     [SerializeField] private Button controlButton;
     [SerializeField] private Text controlLabel;
     [SerializeField] private Button speed01, speed03, speed1;
-    [SerializeField] private InputField timeInput;
-    [SerializeField] private Button seekButton;
+    [SerializeField] private U_Level_TimelineSV timeline;
     [SerializeField] private Button resumeButton;
-    [SerializeField] private U_Level_SegmentSV rowTemplate;
-    [SerializeField] private Transform rowsRoot;
+    [SerializeField] private Button startButton, restartButton, exitButton;
+    [SerializeField] private GameObject resultPanel;
+    [SerializeField] private Text resultText;
     private LevelControl _owner;
-    private readonly List<U_Level_SegmentSV> _rows = new List<U_Level_SegmentSV>();
-    public void SetOwner(LevelControl owner) => _owner = owner;
+    public void SetOwner(LevelControl owner)
+    {
+        _owner = owner;
+        timeline.SetOwner(owner.PreparationEcho);
+        timeline.Open();
+    }
     protected override void _Initialized() { }
     protected override void _FirstOpen() { }
     protected override void _Open() { }
@@ -27,8 +31,10 @@ public sealed class U_Level_MainView : UIViewBase
         speed01.onClick.AddListener(Speed01);
         speed03.onClick.AddListener(Speed03);
         speed1.onClick.AddListener(Speed1);
-        seekButton.onClick.AddListener(Seek);
         resumeButton.onClick.AddListener(Resume);
+        startButton.onClick.AddListener(StartCombat);
+        restartButton.onClick.AddListener(Restart);
+        exitButton.onClick.AddListener(Exit);
     }
     protected override void _Dispose()
     {
@@ -36,8 +42,10 @@ public sealed class U_Level_MainView : UIViewBase
         speed01.onClick.RemoveListener(Speed01);
         speed03.onClick.RemoveListener(Speed03);
         speed1.onClick.RemoveListener(Speed1);
-        seekButton.onClick.RemoveListener(Seek);
         resumeButton.onClick.RemoveListener(Resume);
+        startButton.onClick.RemoveListener(StartCombat);
+        restartButton.onClick.RemoveListener(Restart);
+        exitButton.onClick.RemoveListener(Exit);
     }
     private void Toggle()
     {
@@ -49,36 +57,45 @@ public sealed class U_Level_MainView : UIViewBase
     private void Resume()
     {
         UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(null);
+        if (GameManager.Instance.IsPaused) GameManager.Instance.RequestResume();
         _owner.SetPreparationCaptured(true);
     }
-    private void Seek()
-    {
-        if (float.TryParse(timeInput.text, NumberStyles.Float, CultureInfo.InvariantCulture, out float time) &&
-            _owner.PreparationEcho.SeekPreparation(time))
-            timeInput.text = time.ToString("0.00", CultureInfo.InvariantCulture);
-    }
+    private void StartCombat() => _owner.StartCombat();
+    private void Restart() => _owner.RestartPreparation();
+    private void Exit() => _owner.ExitLevel();
     protected override void OnRefresh()
     {
         var m = _model as EchoModel;
         if (m == null || _owner == null) return;
-        status.text = $"回声时间 {m.cursor:F2}s   流速 {m.EffectiveSpeed:0.0}x\n本段 {m.recordDuration:F2} / 20s   已保存 {m.segments.Count} 段";
-        controlLabel.text = m.isRecording ? "保存并返回本体（E）" : "创建并操控影子（E）";
-        timeInput.interactable = seekButton.interactable = !m.isRecording;
+        var level = _owner.GetModel();
+        bool preparing = level.phase == LevelPhase.EchoPreparation || level.phase == LevelPhase.Idle;
+        bool ended = level.phase == LevelPhase.Ended;
+        stageTitle.text = preparing ? "LEVEL 01 / ECHO PREPARATION" : ended ? "LEVEL 01 / COMBAT ENDED" : GameManager.Instance.IsPaused ? "LEVEL 01 / PAUSED" : "LEVEL 01 / COMBAT";
+        preparationHelp.SetActive(preparing); combatHelp.SetActive(!preparing);
+        timeline.gameObject.SetActive(preparing);
+        startButton.gameObject.SetActive(preparing);
+        controlButton.gameObject.SetActive(preparing);
+        speed01.gameObject.SetActive(preparing); speed03.gameObject.SetActive(preparing); speed1.gameObject.SetActive(preparing);
+        resultPanel.SetActive(ended);
+        if (ended)
+            resultText.text = (level.result == LevelResult.Victory ? "VICTORY" : "DEFEAT") + $"\nEnemies defeated: {level.killCount}\nCombat time: {level.combatElapsed:0.0}s";
+        if (!preparing)
+        {
+            float remaining = level.RemainingTime;
+            status.text = $"Time {(int)(remaining / 60):00}:{(int)(remaining % 60):00}\nHP {_owner.CombatPlayer.Hp:0} / 100 · Enemies {level.aliveEnemyCount}";
+            if (level.bossState == BossSpawnState.Spawning) status.text += "\nRetrying boss spawn...";
+            else if (level.bossSpawned && _owner.BossHealth > 0) status.text += $"\nDestruction Boss {_owner.BossHealth:0} / 10000";
+            resumeButton.gameObject.SetActive(!ended && (!_owner.Captured || GameManager.Instance.IsPaused));
+            return;
+        }
+        status.text = $"Echo Time {m.cursor:F2}s   Speed {m.EffectiveSpeed:0.0}x\nClip {m.recordDuration:F2} / 20s\nEchoes {m.segments.Count} / {m.echoLimit} · Left {m.RemainingEchoes}";
+        if (!string.IsNullOrEmpty(level.runtimeError)) status.text += "\n" + level.runtimeError;
+        controlButton.interactable = m.isRecording || m.CanCreateEcho;
+        controlLabel.text = m.isRecording ? "Save Echo (E)" : m.RemainingEchoes == 0 ? "No Echo Uses Left" : "Create Echo (E)";
         speed01.interactable = m.selectedSpeed != .1f;
         speed03.interactable = m.selectedSpeed != .3f;
         speed1.interactable = m.selectedSpeed != 1;
-        while (_rows.Count < m.segments.Count)
-        {
-            var row = Instantiate(rowTemplate, rowsRoot);
-            row.gameObject.SetActive(true);
-            row.Open();
-            _rows.Add(row);
-        }
-        for (int i = 0; i < _rows.Count; i++)
-        {
-            _rows[i].gameObject.SetActive(i < m.segments.Count);
-            if (i < m.segments.Count) _rows[i].Present(_owner.PreparationEcho, m.segments[i], !m.isRecording);
-        }
+        timeline.Refresh();
         resumeButton.gameObject.SetActive(!_owner.Captured);
     }
 }

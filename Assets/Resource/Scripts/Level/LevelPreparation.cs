@@ -1,7 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public partial class LevelControl
 {
@@ -21,12 +19,30 @@ public partial class LevelControl
     private void InitializePreparation()
     {
         if (preparation == null || preparation.player == null || preparation.echo == null || preparation.echoVisual == null ||
-            preparation.shadowMaterial == null || preparation.effectsRoot == null || preparation.hud == null ||
-            preparation.enemies == null || preparation.enemies.Length == 0)
+            preparation.shadowMaterial == null || preparation.enemyShadowMaterial == null || preparation.effectsRoot == null || preparation.hud == null ||
+            preparation.enemies == null)
             throw new InvalidOperationException("Formal level preparation configuration is incomplete.");
         foreach (var enemy in preparation.enemies)
             if (enemy == null) throw new InvalidOperationException("Preparation enemy reference is missing.");
+        if (preparation.levelConfig == null) throw new InvalidOperationException("请先创建并绑定关卡配置资源。");
+        preparation.levelConfig.Validate();
+        if (preparation.combat == null || preparation.combat.bossPrefab == null ||
+            preparation.combat.playerShotMaterial == null || preparation.combat.enemyShotMaterial == null)
+            throw new InvalidOperationException("Formal combat configuration is incomplete.");
+        foreach (var stats in new[] { preparation.combat.ordinary, preparation.combat.boss })
+            if (stats == null || stats.health <= 0 || stats.speed <= 0 || stats.fireInterval <= 0 || stats.range <= 0 ||
+                float.IsNaN(stats.health + stats.speed + stats.fireInterval + stats.range + stats.damage) ||
+                float.IsInfinity(stats.health + stats.speed + stats.fireInterval + stats.range + stats.damage))
+                throw new InvalidOperationException("Enemy combat parameters must be finite and positive.");
+        ValidateNestBindings();
+        foreach (var enemy in preparation.enemies)
+            if (InitialEnemy(enemy) == null) throw new InvalidOperationException("EnemyActor is missing from a formal enemy.");
         _preparationInput = InputManager.Instance;
+        var eventSystem = UnityEngine.EventSystems.EventSystem.current;
+        if (eventSystem != null && eventSystem.gameObject.scene != gameObject.scene)
+            foreach (var root in gameObject.scene.GetRootGameObjects())
+                foreach (var localInput in root.GetComponentsInChildren<UnityEngine.EventSystems.EventSystem>(true))
+                    localInput.gameObject.SetActive(false);
         preparation.player.Initialize();
         preparation.echo.InitializeForPreparation(preparation.player);
         _bodySpawn = preparation.player.transform.position;
@@ -41,19 +57,24 @@ public partial class LevelControl
     public void RestartPreparation()
     {
         if (!usePreparation || preparation == null) return;
+        Configuration.Validate();
+        ValidateNestBindings();
         CleanupPreparation();
+        GameManager.Instance.SetState(GameState.Playing);
         model.Reset();
         _active = false;
         _waveIndex = _spawnedInWave = 0;
         _waveTimer = _intervalTimer = 0;
         model.runId = Guid.NewGuid().ToString("N");
+        model.durationSeconds = preparation.DurationSeconds;
         preparation.player.ResetState();
         preparation.player.ResetPose(_bodySpawn, _bodyRotation);
         preparation.echo.BeginPreparation(preparation.player, preparation.echoVisual,
-            preparation.shadowMaterial, preparation.effectsRoot);
+            preparation.shadowMaterial, preparation.effectsRoot, preparation.DurationSeconds, Configuration.echoLimit);
         foreach (var enemy in preparation.enemies)
         {
-            enemy.Freeze(preparation.shadowMaterial);
+            InitialEnemy(enemy).ResetForRun(this, model.runId, preparation.player, preparation.combat.ordinary);
+            enemy.Freeze(preparation.enemyShadowMaterial);
             model.enemyInstanceIds.Add(enemy.GetInstanceID());
         }
         model.aliveEnemyCount = model.enemyInstanceIds.Count;
@@ -66,17 +87,14 @@ public partial class LevelControl
     {
         if (model.phase != LevelPhase.EchoPreparation) return;
         var input = InputManager.Instance;
-        if (input.PausePressed) SetPreparationCaptured(!Captured);
+        if (input.CursorTogglePressed) SetPreparationCaptured(!Captured);
         if (GameManager.Instance.IsPaused) return;
-        bool typing = EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null &&
-            EventSystem.current.currentSelectedGameObject.GetComponent<InputField>() != null;
-        if (Captured && !typing)
+        if (Captured)
         {
-            if (input.RestartPressed) { RestartPreparation(); return; }
             if (input.EchoPressed) preparation.echo.ToggleControl();
             if (input.EchoSpeedPressed) preparation.echo.CyclePreparationSpeed();
-            preparation.echo.Tick(dt);
         }
+        if (Captured || preparation.echo.GetModel().isPreviewPlaying) preparation.echo.Tick(dt);
         preparation.hud.Refresh();
     }
 
@@ -96,6 +114,7 @@ public partial class LevelControl
     private void CleanupPreparation()
     {
         if (!usePreparation || preparation == null) return;
+        CleanupCombat();
         preparation.echo?.ResetState();
         if (preparation.enemies != null)
             foreach (var enemy in preparation.enemies) if (enemy != null) enemy.Restore();

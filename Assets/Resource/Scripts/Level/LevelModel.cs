@@ -26,7 +26,13 @@ public class LevelModel : ModelBase
     public string runId;
     public LevelPhase phase;
     public float combatElapsed;
+    public float durationSeconds;
     public bool bossSpawned;
+    public BossSpawnState bossState;
+    public bool normalSpawningComplete;
+    public LevelResult result;
+    public string runtimeError;
+    public float RemainingTime => Mathf.Max(0, durationSeconds - combatElapsed);
     public System.Collections.Generic.List<int> enemyInstanceIds = new System.Collections.Generic.List<int>();
 
     public override void Reset()
@@ -38,12 +44,19 @@ public class LevelModel : ModelBase
         runId = null;
         phase = LevelPhase.Idle;
         combatElapsed = 0;
+        durationSeconds = 0;
         bossSpawned = false;
+        bossState = BossSpawnState.Pending;
+        normalSpawningComplete = false;
+        result = LevelResult.None;
+        runtimeError = null;
         enemyInstanceIds.Clear();
     }
 }
 
 public enum LevelPhase { Idle, EchoPreparation, Combat, Ended }
+public enum LevelResult { None, Victory, Defeat }
+public enum BossSpawnState { Pending, Spawning, Active, Defeated }
 
 public enum LevelObjective
 {

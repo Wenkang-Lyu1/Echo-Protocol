@@ -81,4 +81,9 @@ public enum GameEvent
     // Backing identifiers for module event names (use LoginEvent at call sites).
     Login_Changed,
     Login_Done,
+    FormalLevel_CombatStarted,
+    FormalLevel_EnemyDied,
+    FormalLevel_BossSpawned,
+    FormalLevel_Result,
+    FormalLevel_ProjectileHit,
 }

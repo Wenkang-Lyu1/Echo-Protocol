@@ -5,6 +5,7 @@ public sealed class U_Level_MainView : UIViewBase
 {
     [SerializeField] private Text status;
     [SerializeField] private Text stageTitle;
+    [SerializeField] private string levelTitle = "LEVEL 01";
     [SerializeField] private GameObject preparationHelp, combatHelp;
     [SerializeField] private Button controlButton;
     [SerializeField] private Text controlLabel;
@@ -70,7 +71,7 @@ public sealed class U_Level_MainView : UIViewBase
         var level = _owner.GetModel();
         bool preparing = level.phase == LevelPhase.EchoPreparation || level.phase == LevelPhase.Idle;
         bool ended = level.phase == LevelPhase.Ended;
-        stageTitle.text = preparing ? "LEVEL 01 / ECHO PREPARATION" : ended ? "LEVEL 01 / COMBAT ENDED" : GameManager.Instance.IsPaused ? "LEVEL 01 / PAUSED" : "LEVEL 01 / COMBAT";
+        stageTitle.text = levelTitle + (preparing ? " / ECHO PREPARATION" : ended ? " / COMBAT ENDED" : GameManager.Instance.IsPaused ? " / PAUSED" : " / COMBAT");
         preparationHelp.SetActive(preparing); combatHelp.SetActive(!preparing);
         timeline.gameObject.SetActive(preparing);
         startButton.gameObject.SetActive(preparing);

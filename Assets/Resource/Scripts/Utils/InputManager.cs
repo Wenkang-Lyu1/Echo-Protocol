@@ -48,6 +48,14 @@ public class InputManager : MonoSingleton<InputManager>
     public bool FirePressed { get; private set; }
     public bool CursorTogglePressed { get; private set; }
     public bool StartCombatPressed { get; private set; }
+    public bool QuickVictoryPressed { get; private set; }
+
+    public bool ConsumeQuickVictory()
+    {
+        bool pressed = QuickVictoryPressed;
+        QuickVictoryPressed = false;
+        return pressed;
+    }
     private bool _gameplayEnabled = true;
     private bool _pendingEcho, _pendingEchoSpeed;
     private bool _pendingStartCombat;
@@ -211,6 +219,7 @@ public class InputManager : MonoSingleton<InputManager>
         _actionMap = null;
         MoveInput = LookInput = Vector2.zero;
         FireHeld = AimHeld = SprintHeld = CrouchHeld = false;
+        QuickVictoryPressed = false;
     }
 
     public void EnableGameplay(bool enable)
@@ -240,7 +249,9 @@ public class InputManager : MonoSingleton<InputManager>
         _pendingStartCombat = false;
         // Cursor control must remain readable while gameplay actions are disabled.
         CursorTogglePressed = false;
+        QuickVictoryPressed = false;
 #if ENABLE_LEGACY_INPUT_MANAGER
+        QuickVictoryPressed = Input.GetKeyDown(KeyCode.F1);
         CursorTogglePressed = Input.GetMouseButtonDown(1);
         StartCombatPressed |= Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
         PausePressed = Input.GetKeyDown(KeyCode.Escape);
@@ -263,6 +274,11 @@ public class InputManager : MonoSingleton<InputManager>
         }
 #endif
 #if !ENABLE_LEGACY_INPUT_MANAGER
+        var keyboardType = Type.GetType("UnityEngine.InputSystem.Keyboard, Unity.InputSystem");
+        var keyboard = keyboardType?.GetProperty("current", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+        var f1 = keyboard != null ? keyboardType.GetProperty("f1Key")?.GetValue(keyboard) : null;
+        if (f1 != null)
+            QuickVictoryPressed = (bool)f1.GetType().GetProperty("wasPressedThisFrame").GetValue(f1);
         var mouseType = Type.GetType("UnityEngine.InputSystem.Mouse, Unity.InputSystem") ??
             Type.GetType("UnityEngine.InputSystem.Mouse, UnityEngine.InputSystem");
         var mouse = mouseType?.GetProperty("current", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);

@@ -8,7 +8,10 @@ public sealed class NestWaveSchedule
     private readonly HashSet<int> _alive = new HashSet<int>();
     private int _waveIndex, _spawned;
     private float _readyTime;
+    private float _nextSpawnTime;
+    private readonly int _maxAlive;
     public string NestId { get; }
+    public bool RandomizeSpawnPoints { get; }
     public int CurrentWave => Math.Min(_waveIndex + 1, _waves.Length);
     public bool SpawningComplete => _waves.Length == 0 ||
         (_waveIndex == _waves.Length - 1 && _spawned == _waves[_waveIndex].enemyCount) || _waveIndex >= _waves.Length;
@@ -17,10 +20,14 @@ public sealed class NestWaveSchedule
     {
         NestId = config.nestId;
         _readyTime = config.firstWaveTimeSeconds;
+        _nextSpawnTime = _readyTime;
+        _maxAlive = config.maxAliveEnemies;
+        RandomizeSpawnPoints = config.randomizeSpawnPoints;
         _waves = new NestWaveConfigEntry[config.waves.Length];
         for (int i = 0; i < _waves.Length; i++)
             _waves[i] = new NestWaveConfigEntry { enemyCount = config.waves[i].enemyCount,
-                delayAfterPreviousClearSeconds = config.waves[i].delayAfterPreviousClearSeconds };
+                delayAfterPreviousClearSeconds = config.waves[i].delayAfterPreviousClearSeconds,
+                spawnIntervalSeconds = config.waves[i].spawnIntervalSeconds };
     }
 
     // The callback returns a successfully initialized enemy ID, or null to retry later.
@@ -30,10 +37,13 @@ public sealed class NestWaveSchedule
         if (_waveIndex >= _waves.Length || combatTime < _readyTime) return;
         while (_spawned < _waves[_waveIndex].enemyCount)
         {
+            if (combatTime < _nextSpawnTime || (_maxAlive > 0 && _alive.Count >= _maxAlive)) return;
             int? id = spawn(_spawned);
             if (!id.HasValue) return;
             if (!_alive.Add(id.Value)) throw new InvalidOperationException("Duplicate nest enemy ID: " + id);
             _spawned++;
+            _nextSpawnTime = combatTime + _waves[_waveIndex].spawnIntervalSeconds;
+            if (_waves[_waveIndex].spawnIntervalSeconds > 0) return;
         }
     }
 
@@ -48,6 +58,9 @@ public sealed class NestWaveSchedule
         _waveIndex++;
         _spawned = 0;
         if (_waveIndex < _waves.Length)
+        {
             _readyTime = combatTime + _waves[_waveIndex].delayAfterPreviousClearSeconds;
+            _nextSpawnTime = _readyTime;
+        }
     }
 }

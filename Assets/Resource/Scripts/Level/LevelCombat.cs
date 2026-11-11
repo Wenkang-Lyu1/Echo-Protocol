@@ -80,6 +80,8 @@ public partial class LevelControl
 
     private void TickFormalLevel(float dt)
     {
+        if (_loadingNextLevel) return;
+        if (_preparationInput.ConsumeQuickVictory()) { CompleteAndAdvance(); return; }
         if (_preparationInput.RestartPressed && model.phase != LevelPhase.Idle) { RestartPreparation(); return; }
         if (model.phase == LevelPhase.EchoPreparation)
         {

@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80321af930c758c4f844116264f8e2d9, type: 3}
+  m_Name: Level_2
+  m_EditorClassIdentifier:
+  levelId: level_2
+  nextSceneName:
+  durationSeconds: 270
+  echoLimit: 6
+  nests:
+  - nestId: relay_north
+    firstWaveTimeSeconds: 0
+    maxAliveEnemies: 3
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 3
+      delayAfterPreviousClearSeconds: 0
+      spawnIntervalSeconds: 2.4
+    - enemyCount: 4
+      delayAfterPreviousClearSeconds: 14
+      spawnIntervalSeconds: 2.4
+    - enemyCount: 4
+      delayAfterPreviousClearSeconds: 18
+      spawnIntervalSeconds: 2.2
+  - nestId: gallery_west
+    firstWaveTimeSeconds: 18
+    maxAliveEnemies: 2
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 0
+      spawnIntervalSeconds: 3
+    - enemyCount: 3
+      delayAfterPreviousClearSeconds: 20
+      spawnIntervalSeconds: 3
+  - nestId: cargo_east
+    firstWaveTimeSeconds: 35
+    maxAliveEnemies: 2
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 3
+      delayAfterPreviousClearSeconds: 0
+      spawnIntervalSeconds: 2.8
+    - enemyCount: 3
+      delayAfterPreviousClearSeconds: 22
+      spawnIntervalSeconds: 2.8
+  - nestId: service_south
+    firstWaveTimeSeconds: 58
+    maxAliveEnemies: 1
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 0
+      spawnIntervalSeconds: 3.5
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 24
+      spawnIntervalSeconds: 3.5

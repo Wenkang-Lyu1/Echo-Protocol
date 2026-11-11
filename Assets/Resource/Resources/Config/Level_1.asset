@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Level_1
   m_EditorClassIdentifier:
   levelId: level_1
+  nextSceneName: Assets/Scenes/Scene_Level2.unity
   durationSeconds: 240
   echoLimit: 5
   nests:

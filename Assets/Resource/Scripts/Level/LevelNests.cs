@@ -9,6 +9,8 @@ public partial class LevelControl
     private readonly Dictionary<string, NestSpawnBinding> _nestBindings = new Dictionary<string, NestSpawnBinding>(StringComparer.Ordinal);
     private readonly Dictionary<int, NestWaveSchedule> _enemyNests = new Dictionary<int, NestWaveSchedule>();
     private readonly Dictionary<string, float> _nestRetries = new Dictionary<string, float>(StringComparer.Ordinal);
+    private readonly Dictionary<string, int[]> _nestSpawnOrders = new Dictionary<string, int[]>(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _nestSpawnWaves = new Dictionary<string, int>(StringComparer.Ordinal);
     public LevelConfig Configuration => preparation.levelConfig;
 
     private void ValidateNestBindings()
@@ -37,7 +39,7 @@ public partial class LevelControl
 
     private void InitializeNests()
     {
-        _nestSchedules.Clear(); _enemyNests.Clear(); _nestRetries.Clear();
+        ClearNests();
         foreach (var nest in Configuration.nests) _nestSchedules.Add(new NestWaveSchedule(nest));
         model.normalSpawningComplete = _nestSchedules.TrueForAll(nest => nest.SpawningComplete);
     }
@@ -56,7 +58,21 @@ public partial class LevelControl
     private int? SpawnNestEnemy(NestWaveSchedule nest, int index)
     {
         var binding = _nestBindings[nest.NestId];
-        var point = binding.spawnPoints[index % binding.spawnPoints.Length];
+        // Cache one permutation per wave, including failed attempts, so retries keep their entrance.
+        if (!_nestSpawnWaves.TryGetValue(nest.NestId, out int wave) || wave != nest.CurrentWave)
+        {
+            var order = new int[binding.spawnPoints.Length];
+            for (int i = 0; i < order.Length; i++) order[i] = i;
+            if (nest.RandomizeSpawnPoints)
+                for (int i = order.Length - 1; i > 0; i--)
+                {
+                    int other = UnityEngine.Random.Range(0, i + 1);
+                    int value = order[i]; order[i] = order[other]; order[other] = value;
+                }
+            _nestSpawnOrders[nest.NestId] = order;
+            _nestSpawnWaves[nest.NestId] = nest.CurrentWave;
+        }
+        var point = binding.spawnPoints[_nestSpawnOrders[nest.NestId][index % binding.spawnPoints.Length]];
         EnemyActor created = null;
         try
         {
@@ -85,5 +101,6 @@ public partial class LevelControl
     private void ClearNests()
     {
         _nestSchedules.Clear(); _enemyNests.Clear(); _nestRetries.Clear();
+        _nestSpawnOrders.Clear(); _nestSpawnWaves.Clear();
     }
 }

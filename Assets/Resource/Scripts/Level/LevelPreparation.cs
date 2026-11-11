@@ -56,7 +56,7 @@ public partial class LevelControl
 
     public void RestartPreparation()
     {
-        if (!usePreparation || preparation == null) return;
+        if (!usePreparation || preparation == null || _loadingNextLevel) return;
         Configuration.Validate();
         ValidateNestBindings();
         CleanupPreparation();

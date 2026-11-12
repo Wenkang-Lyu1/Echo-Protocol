@@ -30,6 +30,10 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
 
     public Transform CameraPivot => cameraPivot;
     public void SetRecoilWeapon(WeaponControl weapon) => recoilWeapon = weapon;
+    public void SetShootingMovement(bool shooting, float multiplier)
+    {
+        if (_motor != null) _motor.movementMultiplier = shooting ? Mathf.Clamp01(multiplier) : 1;
+    }
 
     // ---- IDamageable (see DamageSystem) ----
     public float Hp => model.hp;

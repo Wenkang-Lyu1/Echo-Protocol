@@ -20,10 +20,11 @@ public class EnemyActor : CharacterActor, IDamageable
     public float Hp => Model.hp;
     public bool IsDead => Model.isDead;
     public NavMeshAgent Agent { get; private set; }
+    public WeaponActor Weapon { get; private set; }
+    public bool IsShooting => _actions != null && _actions.IsShooting;
     private LevelControl _owner;
     private PlayerControl _target;
     private EnemyCombatStats _stats;
-    private double _fireAccumulator;
     private Vector3 _spawn;
     private Quaternion _spawnRotation;
     private Renderer[] _renderers;
@@ -42,17 +43,19 @@ public class EnemyActor : CharacterActor, IDamageable
         _colliders = GetComponentsInChildren<Collider>(true); _collision = new bool[_colliders.Length];
         for (int i = 0; i < _collision.Length; i++) _collision[i] = _colliders[i].enabled;
         _actions = new EnemyActionPresentation(gameObject, IsBoss);
+        Weapon = WeaponActor.BindModelGun(gameObject);
     }
 
     public void ResetForRun(LevelControl owner, string runId, PlayerControl target, EnemyCombatStats stats)
     {
         Cache(); SetRunning(false); Agent.enabled = false;
-        _owner = owner; _target = target; _stats = stats; _fireAccumulator = 0;
+        _owner = owner; _target = target; _stats = stats;
         Model = new CombatEnemyModel { runId = runId, instanceId = gameObject.GetInstanceID(), hp = stats.health };
         transform.SetPositionAndRotation(_spawn, _spawnRotation);
         for (int i = 0; i < _renderers.Length; i++) _renderers[i].enabled = _visible[i];
         for (int i = 0; i < _colliders.Length; i++) _colliders[i].enabled = _collision[i];
         _actions.Reset();
+        Weapon.Configure(owner, new ProjectileOwner(runId, gameObject, IsBoss ? ProjectileSource.Boss : ProjectileSource.Enemy), stats.Weapon);
     }
 
     public bool TryGetStartPosition(out Vector3 position)
@@ -76,7 +79,14 @@ public class EnemyActor : CharacterActor, IDamageable
     {
         if (Agent == null) return;
         running &= !IsDead;
-        if (Agent.enabled && Agent.isOnNavMesh) Agent.isStopped = !running;
+        float multiplier = IsShooting && Weapon != null && Weapon.Attributes != null ? Weapon.Attributes.shootingMoveMultiplier : 1;
+        if (_stats != null) Agent.speed = _stats.speed * multiplier;
+        if (Agent.enabled && Agent.isOnNavMesh)
+        {
+            Agent.isStopped = !running || multiplier <= 0;
+            if (Agent.isStopped) Agent.velocity = Vector3.zero;
+            else if (Agent.velocity.sqrMagnitude > Agent.speed * Agent.speed) Agent.velocity = Vector3.ClampMagnitude(Agent.velocity, Agent.speed);
+        }
     }
 
     public void Tick(float dt)
@@ -85,30 +95,24 @@ public class EnemyActor : CharacterActor, IDamageable
         SetRunning(live);
         if (!live || dt <= 0) return;
         if (Agent.enabled && Agent.isOnNavMesh) Agent.SetDestination(_target.transform.position);
-        var origin = transform.position + Vector3.up * 1.25f;
         var targetPoint = _target.transform.position + Vector3.up * .9f;
-        var offset = targetPoint - origin;
+        var offset = targetPoint - transform.position;
         var flat = new Vector3(offset.x, 0, offset.z);
         if (flat.sqrMagnitude > .01f) transform.rotation = Quaternion.LookRotation(-flat);
-        if (offset.magnitude > _stats.range || !HasLineOfSight(origin, offset))
-        {
-            _fireAccumulator = 0;
-            _actions.Tick(dt, Agent.velocity.magnitude, _stats.speed);
-            return;
-        }
-        int due = CombatShotClock.Advance(ref _fireAccumulator, dt, _stats.fireInterval);
-        for (int i = 0; i < due; i++)
-        {
-            if (!_owner.IsCurrentCombat(Model.runId) || _target.IsDead) break;
-            var direction = Quaternion.Euler(UnityEngine.Random.Range(-_stats.spreadDegrees, _stats.spreadDegrees),
-                UnityEngine.Random.Range(-_stats.spreadDegrees, _stats.spreadDegrees), 0) * offset.normalized;
-            _owner.SpawnProjectile(new ProjectileOwner(Model.runId, gameObject, IsBoss ? ProjectileSource.Boss : ProjectileSource.Enemy),
-                origin, direction, _stats.damage, _stats.range);
-            Model.shotsFired++;
-            _actions.OnShot();
-        }
-        _actions.Tick(dt, Agent.velocity.magnitude, _stats.speed);
+        _actions.Tick(dt, PresentationSpeed, _stats.speed);
+        SetRunning(live);
+        Model.shotsFired += Weapon.TickAutomatic(dt, targetPoint, HasLineOfSight, PrepareWeaponShot);
     }
+
+    private void PrepareWeaponShot()
+    {
+        _actions.OnShot();
+        SetRunning(true);
+        _actions.Tick(0, PresentationSpeed, _stats.speed);
+    }
+
+    // NavMeshAgent.velocity reports the last simulation step until navigation updates.
+    private float PresentationSpeed => Agent.isStopped ? 0 : Mathf.Min(Agent.velocity.magnitude, Agent.speed);
 
     private bool HasLineOfSight(Vector3 origin, Vector3 offset)
     {

@@ -39,6 +39,7 @@ public struct EchoFireEvent
     public float time;
     public Vector3 muzzlePosition;
     public Vector3 fireDirection;
+    public ProjectileAttributes projectile;
 }
 
 [Serializable]

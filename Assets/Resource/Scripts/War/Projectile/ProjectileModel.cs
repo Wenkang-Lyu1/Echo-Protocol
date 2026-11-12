@@ -6,13 +6,15 @@ public readonly struct ProjectileOwner
 {
     public readonly string runId;
     public readonly int instanceId;
+    public readonly int weaponInstanceId;
     public readonly ProjectileSource kind;
     public readonly string segmentId;
     public readonly GameObject source;
-    public ProjectileOwner(string run, GameObject actor, ProjectileSource type, string segment = null)
+    public ProjectileOwner(string run, GameObject actor, ProjectileSource type, string segment = null, int weapon = 0)
     {
         runId = run; source = actor; instanceId = actor != null ? actor.GetInstanceID() : 0;
         kind = type; segmentId = segment;
+        weaponInstanceId = weapon;
     }
     public bool IsPlayerSide => kind == ProjectileSource.Player || kind == ProjectileSource.Echo;
 }
@@ -23,7 +25,8 @@ public sealed class ProjectileModel
     public GameObject hitTarget;
     public Vector3 direction;
     public Vector3 hitPoint;
-    public float damage, speed, remainingRange;
+    public Vector3 spawnPosition;
+    public float damage, speed, remainingRange, collisionRadius;
     public bool finished;
     public bool hitReported;
 }

@@ -15,6 +15,7 @@ public sealed class TutorialControl : GlobalControl<TutorialControl, TutorialMod
     [SerializeField] private U_Tutorial_MainView hud;
     [SerializeField] private float fireInterval = .18f;
     [SerializeField] private float damage = 20;
+    [SerializeField, Range(0, 1)] private float shootingMoveMultiplier = .7f;
     [SerializeField] private float echoDuration = 6;
     [SerializeField] private float echoCooldown = 2;
     private readonly List<TutorialPose> _history = new List<TutorialPose>();
@@ -71,6 +72,7 @@ public sealed class TutorialControl : GlobalControl<TutorialControl, TutorialMod
         _fireCooldown = Mathf.Max(0, _fireCooldown - dt);
         model.echoCooldown = Mathf.Max(0, model.echoCooldown - dt);
         model.hitFeedback = Mathf.Max(0, model.hitFeedback - dt);
+        player.SetShootingMovement(_input.FireHeld, shootingMoveMultiplier);
         player.Tick(dt);
         model.moved |= Vector3.Distance(player.transform.position, _spawn) > 1;
         bool fired = _input.FireHeld && Fire();

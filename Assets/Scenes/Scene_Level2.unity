@@ -14520,18 +14520,32 @@ MonoBehaviour:
       ordinary:
         health: 60
         speed: 2.8
-        fireInterval: 1.7
-        damage: 7
-        range: 26
-        spreadDegrees: 4
+        weapon:
+          fireInterval: 1.7
+          spreadDegrees: 4
+          shootingMoveMultiplier: 0
+          projectile:
+            damage: 7
+            speed: 70
+            range: 26
+            collisionRadius: 0.035
+            visualDiameter: 0.08
+            material: {fileID: 2100000, guid: 0cacb596af2502f41916721cb72d8670, type: 2}
       ordinaryPrefab: {fileID: 1822319540956051251, guid: 0b7f02cd0c7917346a97a18070f702f5, type: 3}
       boss:
         health: 10000
         speed: 7
-        fireInterval: 0.06
-        damage: 12
-        range: 60
-        spreadDegrees: 5
+        weapon:
+          fireInterval: 0.06
+          spreadDegrees: 5
+          shootingMoveMultiplier: 0.7
+          projectile:
+            damage: 12
+            speed: 70
+            range: 60
+            collisionRadius: 0.035
+            visualDiameter: 0.08
+            material: {fileID: 2100000, guid: 0cacb596af2502f41916721cb72d8670, type: 2}
       bossPrefab: {fileID: 1383566440131392796, guid: 98276e90dfd744e429de1ac2b873d91c, type: 3}
       bossSpawnPoints:
       - {fileID: 681642592}
@@ -14558,12 +14572,18 @@ MonoBehaviour:
         spawnPoints:
         - {fileID: 1011402064}
         - {fileID: 3539355}
-      playerDamage: 25
-      playerFireInterval: 0.18
-      projectileSpeed: 70
-      projectileRange: 65
-      playerShotMaterial: {fileID: 2100000, guid: f2db672dc9d76614aaad1c24b14b6e5f, type: 2}
-      enemyShotMaterial: {fileID: 2100000, guid: 0cacb596af2502f41916721cb72d8670, type: 2}
+      playerWeapon:
+        fireInterval: 0.18
+        spreadDegrees: 0
+        shootingMoveMultiplier: 0.7
+        projectile:
+          damage: 25
+          speed: 70
+          range: 65
+          collisionRadius: 0.035
+          visualDiameter: 0.08
+          material: {fileID: 2100000, guid: f2db672dc9d76614aaad1c24b14b6e5f, type: 2}
+      weaponAttributesMigrated: 1
 --- !u!1001 &957081513
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -26,14 +26,18 @@ public partial class LevelControl
             if (enemy == null) throw new InvalidOperationException("Preparation enemy reference is missing.");
         if (preparation.levelConfig == null) throw new InvalidOperationException("请先创建并绑定关卡配置资源。");
         preparation.levelConfig.Validate();
-        if (preparation.combat == null || preparation.combat.bossPrefab == null ||
-            preparation.combat.playerShotMaterial == null || preparation.combat.enemyShotMaterial == null)
+        if (preparation.combat == null || preparation.combat.bossPrefab == null)
             throw new InvalidOperationException("Formal combat configuration is incomplete.");
         foreach (var stats in new[] { preparation.combat.ordinary, preparation.combat.boss })
-            if (stats == null || stats.health <= 0 || stats.speed <= 0 || stats.fireInterval <= 0 || stats.range <= 0 ||
-                float.IsNaN(stats.health + stats.speed + stats.fireInterval + stats.range + stats.damage) ||
-                float.IsInfinity(stats.health + stats.speed + stats.fireInterval + stats.range + stats.damage))
+        {
+            if (stats == null || stats.health <= 0 || stats.speed <= 0 ||
+                float.IsNaN(stats.health + stats.speed) || float.IsInfinity(stats.health + stats.speed))
                 throw new InvalidOperationException("Enemy combat parameters must be finite and positive.");
+            stats.Weapon.Validate();
+            if (stats.Weapon.projectile.material == null) throw new InvalidOperationException("Enemy bullet material is missing.");
+        }
+        preparation.combat.PlayerWeapon.Validate();
+        if (preparation.combat.PlayerWeapon.projectile.material == null) throw new InvalidOperationException("Player bullet material is missing.");
         ValidateNestBindings();
         foreach (var enemy in preparation.enemies)
             if (InitialEnemy(enemy) == null) throw new InvalidOperationException("EnemyActor is missing from a formal enemy.");
@@ -44,6 +48,7 @@ public partial class LevelControl
                 foreach (var localInput in root.GetComponentsInChildren<UnityEngine.EventSystems.EventSystem>(true))
                     localInput.gameObject.SetActive(false);
         preparation.player.Initialize();
+        _playerWeapon = WeaponActor.BindFirstPerson(preparation.player);
         preparation.echo.InitializeForPreparation(preparation.player);
         _bodySpawn = preparation.player.transform.position;
         _bodyRotation = preparation.player.transform.rotation;
@@ -69,6 +74,8 @@ public partial class LevelControl
         model.durationSeconds = preparation.DurationSeconds;
         preparation.player.ResetState();
         preparation.player.ResetPose(_bodySpawn, _bodyRotation);
+        _playerWeapon.Configure(this, new ProjectileOwner(model.runId, preparation.player.gameObject, ProjectileSource.Player), preparation.combat.PlayerWeapon);
+        preparation.echo.SetRecordingWeapon(_playerWeapon);
         preparation.echo.BeginPreparation(preparation.player, preparation.echoVisual,
             preparation.shadowMaterial, preparation.effectsRoot, preparation.DurationSeconds, Configuration.echoLimit);
         foreach (var enemy in preparation.enemies)

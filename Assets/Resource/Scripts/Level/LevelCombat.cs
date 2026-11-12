@@ -10,7 +10,9 @@ public partial class LevelControl
     private readonly List<EnemyActor> _dynamicEnemies = new List<EnemyActor>();
     private readonly List<EnemyActor> _dyingEnemies = new List<EnemyActor>();
     private readonly List<ProjectileActor> _projectiles = new List<ProjectileActor>();
-    private float _bossRetry, _playerFireCooldown;
+    private float _bossRetry;
+    private WeaponActor _playerWeapon;
+    public WeaponActor PlayerWeapon => _playerWeapon;
     private DestructionBossActor _boss;
     private PlayerEchoActor _playerShotView;
     public PlayerControl CombatPlayer => preparation.player;
@@ -47,7 +49,7 @@ public partial class LevelControl
         }
         InitializeNests();
         TickNests();
-        _playerFireCooldown = _bossRetry = 0;
+        _playerWeapon.ResetClock(); _bossRetry = 0;
         var shotView = new GameObject("Player shot presentation"); shotView.transform.SetParent(preparation.effectsRoot, false);
         _playerShotView = shotView.AddComponent<PlayerEchoActor>();
         preparation.echo.StartCombatPlayback(model.runId, FireEchoProjectile);
@@ -124,6 +126,7 @@ public partial class LevelControl
         }
         if (model.runId != run || model.phase != LevelPhase.Combat) return;
         // Releasing the cursor disables input, but health timers and body physics still run.
+        preparation.player.SetShootingMovement(Captured && _preparationInput.FireHeld, _playerWeapon.Attributes.shootingMoveMultiplier);
         preparation.player.Tick(dt);
         TickPlayerWeapon(dt);
         // Snapshot: a projectile or event callback may synchronously kill an enemy.
@@ -146,33 +149,43 @@ public partial class LevelControl
 
     private void TickPlayerWeapon(float dt)
     {
-        _playerFireCooldown = Mathf.Max(0, _playerFireCooldown - dt);
-        if (!Captured || !_preparationInput.FireHeld || _playerFireCooldown > 0 || preparation.player.IsDead) return;
-        _playerFireCooldown = preparation.combat.playerFireInterval;
+        _playerWeapon.TickCooldown(dt);
+        if (!Captured || !_preparationInput.FireHeld || preparation.player.IsDead) return;
         var camera = preparation.player.CameraPivot;
-        var origin = camera.TransformPoint(.22f, -.06f, .75f);
-        var target = camera.position + camera.forward * preparation.combat.projectileRange;
-        if (Physics.Raycast(camera.position, camera.forward, out var hit, preparation.combat.projectileRange, ~(1 << 2), QueryTriggerInteraction.Ignore)) target = hit.point;
-        var shot = new EchoFireEvent { muzzlePosition = origin, fireDirection = (target - origin).normalized };
-        _playerShotView.ShowShot(shot, preparation.combat.playerShotMaterial, false);
-        SpawnProjectile(new ProjectileOwner(model.runId, preparation.player.gameObject, ProjectileSource.Player),
-            shot.muzzlePosition, shot.fireDirection, preparation.combat.playerDamage, preparation.combat.projectileRange);
+        float range = _playerWeapon.Attributes.projectile.range;
+        var target = camera.position + camera.forward * range;
+        if (Physics.Raycast(camera.position, camera.forward, out var hit, range, ~(1 << 2), QueryTriggerInteraction.Ignore)) target = hit.point;
+        if (!_playerWeapon.TryFireAt(target)) return;
+        var shot = new EchoFireEvent { muzzlePosition = _playerWeapon.Model.lastMuzzlePosition, fireDirection = _playerWeapon.Model.lastDirection };
+        _playerShotView.ShowShot(shot, _playerWeapon.Attributes.projectile.material, false);
     }
 
     private void FireEchoProjectile(string runId, PlayerEchoActor actor, EchoSegment segment, EchoFireEvent shot)
     {
         if (!IsCurrentCombat(runId) || preparation.player.IsDead) return;
-        SpawnProjectile(new ProjectileOwner(runId, actor.gameObject, ProjectileSource.Echo, segment.id), shot.muzzlePosition,
-            shot.fireDirection, preparation.combat.playerDamage, preparation.combat.projectileRange);
+        var weapon = actor.GetComponent<WeaponActor>();
+        if (weapon == null)
+        {
+            weapon = actor.gameObject.AddComponent<WeaponActor>();
+            weapon.Configure(this, new ProjectileOwner(runId, actor.gameObject, ProjectileSource.Echo, segment.id), preparation.combat.PlayerWeapon);
+        }
+        weapon.Replay(shot);
     }
 
     public ProjectileActor SpawnProjectile(ProjectileOwner owner, Vector3 origin, Vector3 direction, float damage, float range)
     {
+        var attributes = (owner.IsPlayerSide ? preparation.combat.PlayerWeapon :
+            owner.kind == ProjectileSource.Boss ? preparation.combat.boss.Weapon : preparation.combat.ordinary.Weapon).projectile.Copy();
+        attributes.damage = damage; attributes.range = range;
+        return SpawnProjectile(owner, origin, direction, attributes);
+    }
+
+    public ProjectileActor SpawnProjectile(ProjectileOwner owner, Vector3 origin, Vector3 direction, ProjectileAttributes attributes)
+    {
         if (!IsCurrentCombat(owner.runId) || preparation.player.IsDead || direction.sqrMagnitude < .001f) return null;
         var go = new GameObject(owner.kind + " bullet"); go.transform.SetParent(preparation.effectsRoot, false);
         var actor = go.AddComponent<ProjectileActor>();
-        actor.Initialize(this, owner, origin, direction, damage, preparation.combat.projectileSpeed, range,
-            owner.IsPlayerSide ? preparation.combat.playerShotMaterial : preparation.combat.enemyShotMaterial);
+        actor.Initialize(this, owner, origin, direction, attributes);
         _projectiles.Add(actor);
         return actor;
     }
@@ -180,13 +193,7 @@ public partial class LevelControl
     public void ResolveProjectileHit(ProjectileActor projectile)
     {
         var data = projectile.Model;
-        if (!IsCurrentCombat(data.owner.runId) || data.hitTarget == null || data.hitReported) return;
-        data.hitReported = true;
-        var enemy = data.hitTarget.GetComponentInParent<EnemyActor>();
-        var player = data.hitTarget.GetComponentInParent<PlayerControl>();
-        if (data.damage > 0 && ((data.owner.IsPlayerSide && enemy != null && enemy.Model.runId == model.runId) ||
-            (!data.owner.IsPlayerSide && player == preparation.player)))
-            DamageSystem.Instance.Dispatch(new HitArgs(data.hitTarget, data.owner.source, data.damage, data.owner.kind == ProjectileSource.Echo));
+        if (!projectile.ResolveDamageOnce()) return;
         EventCenter.Instance.Dispatch(LevelEvent.OnProjectileHit, new ProjectileHitArgs(data.owner, data.hitTarget, data.hitPoint));
     }
 
@@ -271,7 +278,8 @@ public partial class LevelControl
         _combatEnemies.Clear(); ClearProjectiles();
         preparation.echo?.StopCombatPlayback();
         foreach (var enemy in _dynamicEnemies) if (enemy != null) { enemy.gameObject.SetActive(false); Destroy(enemy.gameObject); }
-        _dynamicEnemies.Clear(); _boss = null; _bossRetry = _playerFireCooldown = 0;
+        _dynamicEnemies.Clear(); _boss = null; _bossRetry = 0;
+        if (_playerWeapon != null) _playerWeapon.ResetClock();
         _dyingEnemies.Clear();
         ClearNests();
     }

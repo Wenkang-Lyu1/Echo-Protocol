@@ -17,9 +17,10 @@ public partial class EchoControl
     private GameObject _bodyShadow;
     private EchoSegment _segment;
     private float _sampleClock;
-    [SerializeField] private float preparationFireInterval = .18f;
-    private float _preparationFireCooldown;
+    private WeaponActor _recordingWeapon;
     private PlayerEchoActor _controlledActor;
+
+    public void SetRecordingWeapon(WeaponActor weapon) => _recordingWeapon = weapon;
 
     public void InitializeForPreparation(PlayerControl body)
     {
@@ -79,7 +80,7 @@ public partial class EchoControl
             _segment = new EchoSegment { id = Guid.NewGuid().ToString("N"), startTime = model.cursor };
             model.frames.Clear();
             model.fireEvents.Clear();
-            _preparationFireCooldown = 0;
+            _recordingWeapon.ResetClock();
             model.recordDuration = _sampleClock = 0;
             model.isRecording = true;
             CapturePose(0);
@@ -100,20 +101,21 @@ public partial class EchoControl
         if (!model.isRecording) { _body.Tick(dt); return; }
         float limit = Mathf.Min(SegmentLimit, model.levelDuration - _segment.startTime);
         float step = Mathf.Min(dt * model.selectedSpeed, limit - model.recordDuration);
+        _motor.movementMultiplier = InputManager.Instance.FireHeld ? _recordingWeapon.Attributes.shootingMoveMultiplier : 1;
         _motor.Move(step, step / dt);
         model.recordDuration += step;
         model.cursor = _segment.startTime + model.recordDuration;
-        _preparationFireCooldown -= step;
-        if (InputManager.Instance.FireHeld && _preparationFireCooldown <= 0)
+        _recordingWeapon.TickCooldown(step);
+        if (InputManager.Instance.FireHeld)
         {
-            var origin = _camera.TransformPoint(.22f, -.06f, .75f);
-            var aim = _camera.position + _camera.forward * 65;
-            if (Physics.Raycast(_camera.position, _camera.forward, out var hit, 65, ~(1 << 2), QueryTriggerInteraction.Ignore)) aim = hit.point;
-            var shot = new EchoFireEvent { time = model.recordDuration,
-                muzzlePosition = origin, fireDirection = (aim - origin).normalized };
-            model.fireEvents.Add(shot);
-            _controlledActor.ShowShot(shot, _preparationMaterial);
-            _preparationFireCooldown = Mathf.Max(.01f, preparationFireInterval);
+            float range = _recordingWeapon.Attributes.projectile.range;
+            var aim = _camera.position + _camera.forward * range;
+            if (Physics.Raycast(_camera.position, _camera.forward, out var hit, range, ~(1 << 2), QueryTriggerInteraction.Ignore)) aim = hit.point;
+            if (_recordingWeapon.TryRecordShot(model.recordDuration, aim, out var shot))
+            {
+                model.fireEvents.Add(shot);
+                _controlledActor.ShowShot(shot, _preparationMaterial);
+            }
         }
         _sampleClock += step;
         if (_sampleClock >= 1f / Mathf.Max(1, sampleRate) || model.recordDuration >= limit)

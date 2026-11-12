@@ -30,9 +30,7 @@ public class EnemyActor : CharacterActor, IDamageable
     private bool[] _visible;
     private Collider[] _colliders;
     private bool[] _collision;
-    private Animation[] _animations;
-    private bool[] _animated;
-    private bool _running;
+    private EnemyActionPresentation _actions;
 
     private void Cache()
     {
@@ -43,8 +41,7 @@ public class EnemyActor : CharacterActor, IDamageable
         for (int i = 0; i < _visible.Length; i++) _visible[i] = _renderers[i].enabled;
         _colliders = GetComponentsInChildren<Collider>(true); _collision = new bool[_colliders.Length];
         for (int i = 0; i < _collision.Length; i++) _collision[i] = _colliders[i].enabled;
-        _animations = GetComponentsInChildren<Animation>(true); _animated = new bool[_animations.Length];
-        for (int i = 0; i < _animated.Length; i++) _animated[i] = _animations[i].enabled;
+        _actions = new EnemyActionPresentation(gameObject, IsBoss);
     }
 
     public void ResetForRun(LevelControl owner, string runId, PlayerControl target, EnemyCombatStats stats)
@@ -55,7 +52,7 @@ public class EnemyActor : CharacterActor, IDamageable
         transform.SetPositionAndRotation(_spawn, _spawnRotation);
         for (int i = 0; i < _renderers.Length; i++) _renderers[i].enabled = _visible[i];
         for (int i = 0; i < _colliders.Length; i++) _colliders[i].enabled = _collision[i];
-        for (int i = 0; i < _animations.Length; i++) _animations[i].enabled = _animated[i];
+        _actions.Reset();
     }
 
     public bool TryGetStartPosition(out Vector3 position)
@@ -72,7 +69,7 @@ public class EnemyActor : CharacterActor, IDamageable
         Agent.speed = _stats.speed; Agent.acceleration = 40; Agent.angularSpeed = 720;
         Agent.stoppingDistance = IsBoss ? 3 : 5;
         Agent.updateRotation = false;
-        _running = false; SetRunning(true);
+        SetRunning(true);
     }
 
     public void SetRunning(bool running)
@@ -80,9 +77,6 @@ public class EnemyActor : CharacterActor, IDamageable
         if (Agent == null) return;
         running &= !IsDead;
         if (Agent.enabled && Agent.isOnNavMesh) Agent.isStopped = !running;
-        if (_running == running) return;
-        for (int i = 0; i < _animations.Length; i++) _animations[i].enabled = running && _animated[i];
-        _running = running;
     }
 
     public void Tick(float dt)
@@ -96,7 +90,12 @@ public class EnemyActor : CharacterActor, IDamageable
         var offset = targetPoint - origin;
         var flat = new Vector3(offset.x, 0, offset.z);
         if (flat.sqrMagnitude > .01f) transform.rotation = Quaternion.LookRotation(-flat);
-        if (offset.magnitude > _stats.range || !HasLineOfSight(origin, offset)) { _fireAccumulator = 0; return; }
+        if (offset.magnitude > _stats.range || !HasLineOfSight(origin, offset))
+        {
+            _fireAccumulator = 0;
+            _actions.Tick(dt, Agent.velocity.magnitude, _stats.speed);
+            return;
+        }
         int due = CombatShotClock.Advance(ref _fireAccumulator, dt, _stats.fireInterval);
         for (int i = 0; i < due; i++)
         {
@@ -106,7 +105,9 @@ public class EnemyActor : CharacterActor, IDamageable
             _owner.SpawnProjectile(new ProjectileOwner(Model.runId, gameObject, IsBoss ? ProjectileSource.Boss : ProjectileSource.Enemy),
                 origin, direction, _stats.damage, _stats.range);
             Model.shotsFired++;
+            _actions.OnShot();
         }
+        _actions.Tick(dt, Agent.velocity.magnitude, _stats.speed);
     }
 
     private bool HasLineOfSight(Vector3 origin, Vector3 offset)
@@ -125,10 +126,19 @@ public class EnemyActor : CharacterActor, IDamageable
     {
         if (IsDead || _owner == null || !_owner.IsCurrentCombat(Model.runId) || float.IsNaN(damage) || damage <= 0) return;
         Model.hp = Mathf.Max(0, Model.hp - damage);
-        if (Model.hp > 0) return;
+        if (Model.hp > 0) { _actions.OnHit(); return; }
         Model.isDead = true; SetRunning(false);
         for (int i = 0; i < _colliders.Length; i++) _colliders[i].enabled = false;
-        for (int i = 0; i < _renderers.Length; i++) _renderers[i].enabled = false;
+        _actions.OnDeath();
         _owner.NotifyEnemyDeath(Model.runId, Model.instanceId);
+    }
+
+    public bool TickDeathPresentation(float dt)
+    {
+        if (!IsDead) return true;
+        _actions.TickDeath(dt);
+        if (!_actions.DeathFinished) return false;
+        foreach (var renderer in _renderers) renderer.enabled = false;
+        return true;
     }
 }

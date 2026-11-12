@@ -106,4 +106,14 @@ InitTestScene*.unity*
 /UIElementsSchema/
 
 # Auto-generated cache in Assets folder
-/[Aa]ssets/[Ss]ceneDependencyCache*
+Assets/Resource/AIDoc/
+
+# Local tools and validation artifacts
+/Tools/
+
+# Local project instructions
+/AGENTS.md
+
+# Local Unity editor tools
+/Assets/Resource/Scripts/Editor/
+/Assets/Resource/Scripts/Editor.meta

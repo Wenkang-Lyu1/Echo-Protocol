@@ -8,6 +8,7 @@ public partial class LevelControl
 {
     private readonly Dictionary<int, EnemyActor> _combatEnemies = new Dictionary<int, EnemyActor>();
     private readonly List<EnemyActor> _dynamicEnemies = new List<EnemyActor>();
+    private readonly List<EnemyActor> _dyingEnemies = new List<EnemyActor>();
     private readonly List<ProjectileActor> _projectiles = new List<ProjectileActor>();
     private float _bossRetry, _playerFireCooldown;
     private DestructionBossActor _boss;
@@ -68,6 +69,7 @@ public partial class LevelControl
     {
         if (model.runId != runId || model.phase != LevelPhase.Combat || !_combatEnemies.TryGetValue(instanceId, out var actor) || !actor.IsDead) return;
         _combatEnemies.Remove(instanceId); model.enemyInstanceIds.Remove(instanceId);
+        _dyingEnemies.Add(actor);
         model.aliveEnemyCount = _combatEnemies.Count; model.killCount++;
         if (_enemyNests.TryGetValue(instanceId, out var nest))
         {
@@ -83,6 +85,14 @@ public partial class LevelControl
         if (_loadingNextLevel) return;
         if (_preparationInput.ConsumeQuickVictory()) { CompleteAndAdvance(); return; }
         if (_preparationInput.RestartPressed && model.phase != LevelPhase.Idle) { RestartPreparation(); return; }
+        // Death is cosmetic: retire combat identity immediately, then finish the visible action.
+        // Result screens stop gameplay time, so only the remaining death poses use real time there.
+        if (!GameManager.Instance.IsPaused)
+        {
+            float presentationDt = model.phase == LevelPhase.Ended ? Time.unscaledDeltaTime : dt;
+            for (int i = _dyingEnemies.Count - 1; i >= 0; i--)
+                if (_dyingEnemies[i] == null || _dyingEnemies[i].TickDeathPresentation(presentationDt)) _dyingEnemies.RemoveAt(i);
+        }
         if (model.phase == LevelPhase.EchoPreparation)
         {
             if (_preparationInput.StartCombatPressed) { StartCombat(); return; }
@@ -262,6 +272,7 @@ public partial class LevelControl
         preparation.echo?.StopCombatPlayback();
         foreach (var enemy in _dynamicEnemies) if (enemy != null) { enemy.gameObject.SetActive(false); Destroy(enemy.gameObject); }
         _dynamicEnemies.Clear(); _boss = null; _bossRetry = _playerFireCooldown = 0;
+        _dyingEnemies.Clear();
         ClearNests();
     }
 

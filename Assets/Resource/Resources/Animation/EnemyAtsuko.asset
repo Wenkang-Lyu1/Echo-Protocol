@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55085ff34bce44e48a0f3252e143cbe7, type: 3}
+  m_Name: EnemyAtsuko
+  m_EditorClassIdentifier: 
+  idle: {fileID: 7400000, guid: e973c51992ae6f144af03d5235da14ae, type: 2}
+  run: {fileID: 7400000, guid: 6d8fb97ef7c2e174f9f6cb79801951e3, type: 2}
+  crouch: {fileID: 0}
+  jump: {fileID: 0}
+  fire: {fileID: 7400000, guid: be31bd2d6ded6f247aecc04f85b55dc9, type: 2}
+  reload: {fileID: 0}
+  hit: {fileID: 0}
+  die: {fileID: 7400000, guid: acb70a0ddea373f4fb67078f58910520, type: 2}
+  recording: {fileID: 0}
+  playback: {fileID: 0}

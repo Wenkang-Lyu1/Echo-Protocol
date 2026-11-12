@@ -104,16 +104,3 @@ InitTestScene*.unity*
 
 # UI Toolkit auto generated files
 /UIElementsSchema/
-
-# Auto-generated cache in Assets folder
-Assets/Resource/AIDoc/
-
-# Local tools and validation artifacts
-/Tools/
-
-# Local project instructions
-/AGENTS.md
-
-# Local Unity editor tools
-/Assets/Resource/Scripts/Editor/
-/Assets/Resource/Scripts/Editor.meta

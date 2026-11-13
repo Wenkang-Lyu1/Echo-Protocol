@@ -52,7 +52,7 @@ public partial class LevelControl
         _playerWeapon.ResetClock(); _bossRetry = 0;
         var shotView = new GameObject("Player shot presentation"); shotView.transform.SetParent(preparation.effectsRoot, false);
         _playerShotView = shotView.AddComponent<PlayerEchoActor>();
-        preparation.echo.StartCombatPlayback(model.runId, FireEchoProjectile);
+        preparation.echo.StartCombatPlayback(model.runId, FireEchoProjectile, IsEchoPlaybackRunning, IsEchoActivationAllowed, InitializeEchoWeapon);
         SetPreparationCaptured(true);
         EventCenter.Instance.Dispatch(LevelEvent.OnCombatStarted, new ValueArgs<string>(model.runId));
         preparation.hud.Refresh();
@@ -102,6 +102,7 @@ public partial class LevelControl
         }
         if (model.phase != LevelPhase.Combat) { preparation.hud.Refresh(); return; }
         if (_preparationInput.CursorTogglePressed) SetPreparationCaptured(!Captured);
+        bool resuming = GameManager.Instance.IsPaused;
         if (_preparationInput.PausePressed)
         {
             if (GameManager.Instance.IsPaused) GameManager.Instance.RequestResume();
@@ -136,7 +137,12 @@ public partial class LevelControl
             if (!IsCurrentCombat(model.runId) || preparation.player.IsDead) break;
             actor.Tick(dt);
         }
-        preparation.echo.TickCombatPlayback(model.combatElapsed);
+        preparation.echo.TickCombatPlayback(dt);
+        if (!resuming && Captured && _preparationInput.GameplayEnabled)
+        {
+            for (int slot = 1; slot <= preparation.echo.model.slots.Count; slot++)
+                if (_preparationInput.EchoSlotPressed(slot) && preparation.echo.TryActivateSlot(slot)) break;
+        }
         if (model.runId != run || model.phase != LevelPhase.Combat) return;
         Physics.SyncTransforms();
         TickProjectiles(dt);
@@ -163,13 +169,15 @@ public partial class LevelControl
     private void FireEchoProjectile(string runId, PlayerEchoActor actor, EchoSegment segment, EchoFireEvent shot)
     {
         if (!IsCurrentCombat(runId) || preparation.player.IsDead) return;
-        var weapon = actor.GetComponent<WeaponActor>();
-        if (weapon == null)
-        {
-            weapon = actor.gameObject.AddComponent<WeaponActor>();
-            weapon.Configure(this, new ProjectileOwner(runId, actor.gameObject, ProjectileSource.Echo, segment.id), preparation.combat.PlayerWeapon);
-        }
-        weapon.Replay(shot);
+        actor.GetComponent<WeaponActor>().Replay(shot);
+    }
+
+    private bool IsEchoPlaybackRunning(string runId) => IsCurrentCombat(runId) && !preparation.player.IsDead;
+    private bool IsEchoActivationAllowed(string runId) => IsEchoPlaybackRunning(runId) && Captured && _preparationInput.GameplayEnabled;
+    private void InitializeEchoWeapon(string runId, PlayerEchoActor actor, EchoSegment segment)
+    {
+        var weapon = actor.gameObject.AddComponent<WeaponActor>();
+        weapon.Configure(this, new ProjectileOwner(runId, actor.gameObject, ProjectileSource.Echo, segment.id), preparation.combat.PlayerWeapon);
     }
 
     public ProjectileActor SpawnProjectile(ProjectileOwner owner, Vector3 origin, Vector3 direction, float damage, float range)

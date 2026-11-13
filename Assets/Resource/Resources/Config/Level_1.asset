@@ -16,6 +16,7 @@ MonoBehaviour:
   nextSceneName: Assets/Scenes/Scene_Level2.unity
   durationSeconds: 240
   echoLimit: 5
+  echoSkill: {fileID: 11400000, guid: 8ea2217d665144e695bc1beca03b971c, type: 2}
   nests:
   - nestId: nest_a
     firstWaveTimeSeconds: 0

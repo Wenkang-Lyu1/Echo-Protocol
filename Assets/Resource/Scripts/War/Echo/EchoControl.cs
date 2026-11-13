@@ -133,7 +133,7 @@ public partial class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     private void OnRecordStart(GameEventArgs args)
     {
-        if (model.isPreparing) return;
+        if (model.isPreparing || _body != null) return;
         if (model.isRecording) return;
         model.isRecording = true;
         model.recordDuration = 0f;
@@ -146,7 +146,7 @@ public partial class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     private void OnRecordEnd(GameEventArgs args)
     {
-        if (model.isPreparing) return;
+        if (model.isPreparing || _body != null) return;
         StopRecording();
     }
 
@@ -172,7 +172,7 @@ public partial class EchoControl : GlobalControl<EchoControl, EchoModel>
 
     public bool TryDeploy(Vector3 deployPosition)
     {
-        if (model.isPreparing) return false;
+        if (model.isPreparing || _body != null) return false;
         if (model.FrameCount == 0)
         {
                         DispatchFail("No recording data");

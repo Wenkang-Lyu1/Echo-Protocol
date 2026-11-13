@@ -5,14 +5,21 @@ public partial class EchoControl
 {
     private readonly Dictionary<string, GameObject> _previews = new Dictionary<string, GameObject>();
     private readonly Dictionary<string, int> _previewShotIndices = new Dictionary<string, int>();
-    public float PreviewEnd
+    public float PreviewEnd => model.isRecording ? model.segmentLimitSeconds : model.SelectedSegment?.duration ?? 0;
+
+    public bool SelectPreparationSlot(int slotIndex)
     {
-        get => model.levelDuration;
+        if (!model.isPreparing || model.isRecording) return false;
+        var slot = model.slots.Find(s => s.slotIndex == slotIndex);
+        if (slot == null || string.IsNullOrEmpty(slot.segmentId)) return false;
+        ClearPreviews();
+        model.selectedSegmentId = slot.segmentId;
+        return SeekPreparation(0);
     }
 
     public bool TogglePreview()
     {
-        if (!model.isPreparing || model.isRecording || model.segments.Count == 0) return false;
+        if (!model.isPreparing || model.isRecording || model.SelectedSegment == null || PreviewEnd <= 0) return false;
         model.isPreviewPlaying = !model.isPreviewPlaying;
         if (model.isPreviewPlaying && model.cursor >= PreviewEnd)
         {
@@ -28,17 +35,12 @@ public partial class EchoControl
     {
         model.cursor = Mathf.Min(PreviewEnd, model.cursor + dt * model.selectedSpeed);
         UpdatePreviewPoses();
-        foreach (var segment in model.segments)
+        var segment = model.SelectedSegment;
+        if (segment?.shots != null)
         {
-            if (segment.shots == null) continue;
             if (!_previewShotIndices.TryGetValue(segment.id, out int index)) index = 0;
-            while (index < segment.shots.Length && segment.startTime + segment.shots[index].time <= model.cursor)
-            {
-                var visual = GetPreview(segment);
-                visual.SetActive(model.cursor <= segment.startTime + segment.duration);
-                visual.GetComponent<PlayerEchoActor>().ShowShot(segment.shots[index], _preparationMaterial);
-                index++;
-            }
+            while (index < segment.shots.Length && segment.shots[index].time <= model.cursor)
+                GetPreview(segment).GetComponent<PlayerEchoActor>().ShowShot(segment.shots[index++], _preparationMaterial);
             _previewShotIndices[segment.id] = index;
         }
         if (model.cursor >= PreviewEnd) model.isPreviewPlaying = false;
@@ -46,28 +48,12 @@ public partial class EchoControl
 
     private void UpdatePreviewPoses()
     {
-        foreach (var segment in model.segments)
-        {
-            float localTime = model.cursor - segment.startTime;
-            bool visible = localTime >= 0 && localTime <= segment.duration && segment.frames != null && segment.frames.Length > 0;
-            _previews.TryGetValue(segment.id, out var visual);
-            if (visual == null && visible) visual = GetPreview(segment);
-            if (visual == null) continue;
-            visual.SetActive(visible);
-            if (!visible) continue;
-            var frames = segment.frames;
-            int low = 0, high = frames.Length - 1;
-            while (low < high)
-            {
-                int mid = (low + high + 1) / 2;
-                if (frames[mid].time <= localTime) low = mid;
-                else high = mid - 1;
-            }
-            var a = frames[low];
-            var b = frames[Mathf.Min(low + 1, frames.Length - 1)];
-            float blend = b.time > a.time ? Mathf.InverseLerp(a.time, b.time, localTime) : 0;
-            visual.GetComponent<PlayerEchoActor>().SetPose(Vector3.Lerp(a.position, b.position, blend), Quaternion.Slerp(a.rotation, b.rotation, blend));
-        }
+        foreach (var visual in _previews.Values) if (visual != null) visual.SetActive(false);
+        var segment = model.SelectedSegment;
+        if (segment?.frames == null || segment.frames.Length == 0) return;
+        var preview = GetPreview(segment);
+        preview.SetActive(true);
+        PlaceCombatActor(preview.GetComponent<PlayerEchoActor>(), segment.frames, model.cursor);
     }
 
     private GameObject GetPreview(EchoSegment segment)
@@ -82,13 +68,12 @@ public partial class EchoControl
     private void ResetPreviewShotCursors()
     {
         _previewShotIndices.Clear();
-        foreach (var segment in model.segments)
-        {
-            int index = 0;
-            if (segment.shots != null)
-                while (index < segment.shots.Length && segment.startTime + segment.shots[index].time < model.cursor) index++;
-            _previewShotIndices[segment.id] = index;
-        }
+        var segment = model.SelectedSegment;
+        if (segment == null) return;
+        int index = 0;
+        if (segment.shots != null)
+            while (index < segment.shots.Length && segment.shots[index].time < model.cursor) index++;
+        _previewShotIndices[segment.id] = index;
     }
 
     private void ClearPreviews()

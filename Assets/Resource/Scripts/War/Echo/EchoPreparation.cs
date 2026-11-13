@@ -3,7 +3,6 @@ using UnityEngine;
 
 public partial class EchoControl
 {
-    public const float SegmentLimit = 20f;
     private PlayerControl _body;
     private GameObject _visualPrefab;
     private Material _preparationMaterial;
@@ -28,16 +27,20 @@ public partial class EchoControl
         Initialize();
     }
 
-    public void BeginPreparation(PlayerControl body, GameObject visual, Material material, Transform root, float levelDuration, int echoLimit = int.MaxValue)
+    public void BeginPreparation(PlayerControl body, GameObject visual, Material material, Transform root, float levelDuration, EchoSkillConfig skill)
     {
-        if (echoLimit < 0) throw new ArgumentOutOfRangeException(nameof(echoLimit));
+        if (skill == null) throw new ArgumentNullException(nameof(skill));
+        skill.Validate();
         ResetState();
         _body = body;
         _visualPrefab = visual;
         _preparationMaterial = material;
         _visualRoot = root;
         model.levelDuration = levelDuration;
-        model.echoLimit = echoLimit;
+        model.echoLimit = skill.slotCount;
+        model.segmentLimitSeconds = skill.segmentLimitSeconds;
+        model.cooldownSeconds = skill.cooldownSeconds;
+        for (int i = 1; i <= skill.slotCount; i++) model.slots.Add(new EchoSlotModel { slotIndex = i });
         model.isPreparing = true;
     }
 
@@ -47,6 +50,8 @@ public partial class EchoControl
         if (model.isRecording) { SaveSegment(); return true; }
         if (!model.CanCreateEcho) return false;
         if (_body == null || _body.CameraPivot == null || _visualPrefab == null) return false;
+        var slot = model.slots.Find(s => string.IsNullOrEmpty(s.segmentId));
+        if (slot == null) return false;
         ClearPreviews();
         try
         {
@@ -77,11 +82,14 @@ public partial class EchoControl
             _camera.localPosition = Vector3.zero;
             _camera.localRotation = Quaternion.identity;
             _motor = _body.CreateMotor(_controlled, pivot);
-            _segment = new EchoSegment { id = Guid.NewGuid().ToString("N"), startTime = model.cursor };
+            _segment = new EchoSegment { id = Guid.NewGuid().ToString("N"), startTime = 0 };
             model.frames.Clear();
             model.fireEvents.Clear();
             _recordingWeapon.ResetClock();
             model.recordDuration = _sampleClock = 0;
+            model.cursor = 0;
+            model.selectedSegmentId = null;
+            model.recordingSlotIndex = slot.slotIndex;
             model.isRecording = true;
             CapturePose(0);
             return true;
@@ -99,7 +107,7 @@ public partial class EchoControl
         if (!model.isPreparing || dt <= 0) return;
         if (model.isPreviewPlaying) { TickPreview(dt); return; }
         if (!model.isRecording) { _body.Tick(dt); return; }
-        float limit = Mathf.Min(SegmentLimit, model.levelDuration - _segment.startTime);
+        float limit = model.segmentLimitSeconds;
         float step = Mathf.Min(dt * model.selectedSpeed, limit - model.recordDuration);
         _motor.movementMultiplier = InputManager.Instance.FireHeld ? _recordingWeapon.Attributes.shootingMoveMultiplier : 1;
         _motor.Move(step, step / dt);
@@ -143,6 +151,8 @@ public partial class EchoControl
         _segment.frames = model.frames.ToArray();
         _segment.shots = model.fireEvents.ToArray();
         model.segments.Add(_segment);
+        model.slots.Find(s => s.slotIndex == model.recordingSlotIndex).segmentId = _segment.id;
+        model.selectedSegmentId = _segment.id;
         ReturnToBody();
         return true;
     }
@@ -158,7 +168,7 @@ public partial class EchoControl
 
     public bool SeekPreparation(float time)
     {
-        if (!model.isPreparing || model.isRecording || float.IsNaN(time) || float.IsInfinity(time) || time < 0 || time > model.levelDuration) return false;
+        if (!model.isPreparing || model.isRecording || model.SelectedSegment == null || float.IsNaN(time) || float.IsInfinity(time) || time < 0 || time > PreviewEnd) return false;
         model.cursor = time;
         model.isPreviewPlaying = false;
         ResetPreviewShotCursors();
@@ -178,21 +188,35 @@ public partial class EchoControl
         }
         _previewShotIndices.Remove(id);
         model.segments.RemoveAt(index);
-        if (model.segments.Count == 0) model.isPreviewPlaying = false;
+        var slot = model.slots.Find(s => s.segmentId == id);
+        if (slot != null) slot.segmentId = null;
+        if (model.selectedSegmentId == id)
+        {
+            ClearPreviews();
+            model.selectedSegmentId = null;
+            model.cursor = 0;
+        }
         return true;
     }
 
     private GameObject MakeShadow(Transform parent)
     {
         var shadow = Instantiate(_visualPrefab, parent);
-        var actor = shadow.AddComponent<PlayerEchoActor>();
-        actor.ApplyShadowAppearance(_preparationMaterial);
-        foreach (var t in shadow.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = 0;
-        foreach (var renderer in shadow.GetComponentsInChildren<Renderer>(true))
+        try
         {
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var actor = shadow.GetComponent<PlayerEchoActor>() ?? shadow.AddComponent<PlayerEchoActor>();
+            actor.ApplyShadowAppearance(_preparationMaterial);
+            foreach (var t in shadow.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = 0;
+            foreach (var renderer in shadow.GetComponentsInChildren<Renderer>(true))
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            return shadow;
         }
-        return shadow;
+        catch
+        {
+            shadow.SetActive(false);
+            Destroy(shadow);
+            throw;
+        }
     }
 
     private void ReturnToBody()
@@ -209,6 +233,7 @@ public partial class EchoControl
         _motor = null; _camera = null; _segment = null;
         _controlledActor = null;
         model.isRecording = false;
+        model.recordingSlotIndex = 0;
     }
 
     private void ClearPreparation()

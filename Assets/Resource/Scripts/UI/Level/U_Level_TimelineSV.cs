@@ -40,21 +40,21 @@ public sealed class U_Level_TimelineSV : UIViewBase
     {
         if (_owner == null) return;
         var m = _owner.GetModel();
-        float span = m.levelDuration;
+        float span = _owner.PreviewEnd;
         _refreshing = true;
         try
         {
-            scrubber.maxValue = span;
+            scrubber.maxValue = Mathf.Max(.001f, span);
             scrubber.SetValueWithoutNotify(m.cursor);
         }
         finally { _refreshing = false; }
-        scrubber.interactable = !m.isRecording;
-        playButton.interactable = !m.isRecording && m.segments.Count > 0;
+        scrubber.interactable = !m.isRecording && m.SelectedSegment != null;
+        playButton.interactable = !m.isRecording && m.SelectedSegment != null && span > 0;
         playLabel.text = m.isPreviewPlaying ? "Pause Preview" : "Play Preview";
-        currentTime.text = $"{m.cursor:0.00}s / {span:0}s";
-        emptyMessage.gameObject.SetActive(m.segments.Count == 0);
+        currentTime.text = $"{m.cursor:0.00}s / {span:0.00}s";
+        emptyMessage.gameObject.SetActive(false);
         for (int i = 0; i < ticks.Length; i++) ticks[i].text = (span * i / (ticks.Length - 1)).ToString("0.#") + "s";
-        while (_rows.Count < m.segments.Count)
+        while (_rows.Count < m.slots.Count)
         {
             var row = Instantiate(rowTemplate, rowsRoot, false);
             row.gameObject.SetActive(true);
@@ -63,10 +63,10 @@ public sealed class U_Level_TimelineSV : UIViewBase
         }
         // Position lanes explicitly: an inactive template never participates in layout.
         // The content keeps a real width and height even with only one or two recordings.
-        rowsRoot.sizeDelta = new Vector2(0, Mathf.Max(100, m.segments.Count * 48));
+        rowsRoot.sizeDelta = new Vector2(0, Mathf.Max(100, m.slots.Count * 48));
         for (int i = 0; i < _rows.Count; i++)
         {
-            bool visible = i < m.segments.Count;
+            bool visible = i < m.slots.Count;
             _rows[i].gameObject.SetActive(visible);
             if (!visible) continue;
             var rect = (RectTransform)_rows[i].transform;
@@ -74,11 +74,13 @@ public sealed class U_Level_TimelineSV : UIViewBase
             rect.pivot = new Vector2(.5f, 1);
             rect.anchoredPosition = new Vector2(0, -i * 48);
             rect.sizeDelta = new Vector2(0, 44);
-            _rows[i].Present(_owner, m.segments[i], !m.isRecording, span, i + 1);
+            var slot = m.slots[i];
+            _rows[i].Present(_owner, slot, m.segments.Find(s => s.id == slot.segmentId), !m.isRecording, m.segmentLimitSeconds);
         }
-        float x = .2f + .68f * Mathf.Clamp01(m.cursor / span);
+        float x = .2f + .68f * (span > 0 ? Mathf.Clamp01(m.cursor / span) : 0);
         playhead.anchorMin = new Vector2(x, 0); playhead.anchorMax = new Vector2(x, 1);
         playhead.anchoredPosition = Vector2.zero;
         playhead.SetAsLastSibling();
+        playhead.gameObject.SetActive(false); // The scrubber handle marks the selected clip; rows are fixed slots.
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine.UI;
 public sealed class U_Level_MainView : UIViewBase
 {
     [SerializeField] private Text status;
+    [SerializeField] private Text echoSkillStatus;
     [SerializeField] private Text stageTitle;
     [SerializeField] private string levelTitle = "LEVEL 01";
     [SerializeField] private GameObject preparationHelp, combatHelp;
@@ -74,6 +75,18 @@ public sealed class U_Level_MainView : UIViewBase
         stageTitle.text = levelTitle + (preparing ? " / ECHO PREPARATION" : ended ? " / COMBAT ENDED" : GameManager.Instance.IsPaused ? " / PAUSED" : " / COMBAT");
         preparationHelp.SetActive(preparing); combatHelp.SetActive(!preparing);
         timeline.gameObject.SetActive(preparing);
+        if (echoSkillStatus != null)
+        {
+            echoSkillStatus.gameObject.SetActive(!preparing && !ended);
+            string slots = "";
+            foreach (var slot in m.slots)
+            {
+                var segment = m.segments.Find(s => s.id == slot.segmentId);
+                string state = segment == null ? "Empty" : m.cooldownRemaining > 0 ? "Cooldown" : "Ready";
+                slots += $"Echo {slot.slotIndex} [{slot.slotIndex}]   {state}\n";
+            }
+            echoSkillStatus.text = slots + (m.cooldownRemaining > 0 ? $"Echo Cooldown   {m.cooldownRemaining:0.0}s" : "Echo Cooldown   Ready");
+        }
         startButton.gameObject.SetActive(preparing);
         controlButton.gameObject.SetActive(preparing);
         speed01.gameObject.SetActive(preparing); speed03.gameObject.SetActive(preparing); speed1.gameObject.SetActive(preparing);
@@ -89,10 +102,12 @@ public sealed class U_Level_MainView : UIViewBase
             resumeButton.gameObject.SetActive(!ended && (!_owner.Captured || GameManager.Instance.IsPaused));
             return;
         }
-        status.text = $"Echo Time {m.cursor:F2}s   Speed {m.EffectiveSpeed:0.0}x\nClip {m.recordDuration:F2} / 20s\nEchoes {m.segments.Count} / {m.echoLimit} · Left {m.RemainingEchoes}";
+        string clipState = m.isRecording ? $"Recording {m.recordDuration:F2} / {m.segmentLimitSeconds:0}s" :
+            m.SelectedSegment != null ? $"Selected Clip {m.SelectedSegment.duration:F2}s" : "Select a clip to preview";
+        status.text = $"Clip Time {m.cursor:F2}s   Speed {m.EffectiveSpeed:0.0}x\n{clipState}\nSlots {m.segments.Count} / {m.slots.Count} · Empty {m.RemainingEchoes}";
         if (!string.IsNullOrEmpty(level.runtimeError)) status.text += "\n" + level.runtimeError;
         controlButton.interactable = m.isRecording || m.CanCreateEcho;
-        controlLabel.text = m.isRecording ? "Save Echo (E)" : m.RemainingEchoes == 0 ? "No Echo Uses Left" : "Create Echo (E)";
+        controlLabel.text = m.isRecording ? "Save Echo (E)" : m.RemainingEchoes == 0 ? "All Slots Full" : "Create Echo (E)";
         speed01.interactable = m.selectedSpeed != .1f;
         speed03.interactable = m.selectedSpeed != .3f;
         speed1.interactable = m.selectedSpeed != 1;

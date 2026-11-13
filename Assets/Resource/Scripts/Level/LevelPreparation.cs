@@ -77,7 +77,7 @@ public partial class LevelControl
         _playerWeapon.Configure(this, new ProjectileOwner(model.runId, preparation.player.gameObject, ProjectileSource.Player), preparation.combat.PlayerWeapon);
         preparation.echo.SetRecordingWeapon(_playerWeapon);
         preparation.echo.BeginPreparation(preparation.player, preparation.echoVisual,
-            preparation.shadowMaterial, preparation.effectsRoot, preparation.DurationSeconds, Configuration.echoLimit);
+            preparation.shadowMaterial, preparation.effectsRoot, preparation.DurationSeconds, Configuration.echoSkill);
         foreach (var enemy in preparation.enemies)
         {
             InitialEnemy(enemy).ResetForRun(this, model.runId, preparation.player, preparation.combat.ordinary);

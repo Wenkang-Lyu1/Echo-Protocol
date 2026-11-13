@@ -27,6 +27,7 @@ public class InputProfile : ScriptableObject
     public string crouch = "Crouch";
     public string pause = "Pause";
     public string startCombat = "StartCombat";
+    public string echoSlot1 = "EchoSlot1", echoSlot2 = "EchoSlot2", echoSlot3 = "EchoSlot3";
 }
 
 [DefaultExecutionOrder(-900)]
@@ -49,6 +50,13 @@ public class InputManager : MonoSingleton<InputManager>
     public bool CursorTogglePressed { get; private set; }
     public bool StartCombatPressed { get; private set; }
     public bool QuickVictoryPressed { get; private set; }
+    public bool EchoSlot1Pressed { get; private set; }
+    public bool EchoSlot2Pressed { get; private set; }
+    public bool EchoSlot3Pressed { get; private set; }
+    public bool GameplayEnabled => _gameplayEnabled;
+    public bool EchoSlotPressed(int slotIndex) => slotIndex == 1 ? EchoSlot1Pressed : slotIndex == 2 ? EchoSlot2Pressed : slotIndex == 3 && EchoSlot3Pressed;
+    private readonly bool[] _pendingSlots = new bool[3];
+    private readonly bool[] _heldSlots = new bool[3];
 
     public bool ConsumeQuickVictory()
     {
@@ -155,6 +163,16 @@ public class InputManager : MonoSingleton<InputManager>
             });
         Bind(profile.echoSpeed, null, c => _pendingEchoSpeed = true, null);
         Bind(profile.startCombat, null, c => _pendingStartCombat = true, null);
+        var slotActions = new[] { profile.echoSlot1, profile.echoSlot2, profile.echoSlot3 };
+        for (int i = 0; i < slotActions.Length; i++)
+        {
+            int slot = i;
+            Bind(slotActions[i], c =>
+            {
+                if (!_heldSlots[slot]) _pendingSlots[slot] = true;
+                _heldSlots[slot] = true;
+            }, null, c => _heldSlots[slot] = false);
+        }
         Bind(profile.pause,
             null, null,
             c => EventCenter.Instance.Dispatch(new GameEventArgs
@@ -220,11 +238,14 @@ public class InputManager : MonoSingleton<InputManager>
         MoveInput = LookInput = Vector2.zero;
         FireHeld = AimHeld = SprintHeld = CrouchHeld = false;
         QuickVictoryPressed = false;
+        ClearEchoSlotPresses();
+        Array.Clear(_heldSlots, 0, _heldSlots.Length);
     }
 
     public void EnableGameplay(bool enable)
     {
         _gameplayEnabled = enable;
+        ClearEchoSlotPresses();
         if (!enable)
         {
             MoveInput = LookInput = Vector2.zero;
@@ -238,10 +259,21 @@ public class InputManager : MonoSingleton<InputManager>
 
         var method = actions.GetType().GetMethod(enable ? "Enable" : "Disable");
         method?.Invoke(actions, null);
+        ClearEchoSlotPresses();
+    }
+
+    private void ClearEchoSlotPresses()
+    {
+        Array.Clear(_pendingSlots, 0, _pendingSlots.Length);
+        EchoSlot1Pressed = EchoSlot2Pressed = EchoSlot3Pressed = false;
     }
 
     private void Update()
     {
+        EchoSlot1Pressed = _gameplayEnabled && _pendingSlots[0];
+        EchoSlot2Pressed = _gameplayEnabled && _pendingSlots[1];
+        EchoSlot3Pressed = _gameplayEnabled && _pendingSlots[2];
+        Array.Clear(_pendingSlots, 0, _pendingSlots.Length);
         EchoPressed = _gameplayEnabled && _pendingEcho;
         EchoSpeedPressed = _gameplayEnabled && _pendingEchoSpeed;
         _pendingEcho = _pendingEchoSpeed = false;
@@ -259,6 +291,9 @@ public class InputManager : MonoSingleton<InputManager>
         FirePressed = Input.GetMouseButtonDown(0);
         EchoPressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.E);
         EchoSpeedPressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.T);
+        EchoSlot1Pressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.Alpha1);
+        EchoSlot2Pressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.Alpha2);
+        EchoSlot3Pressed |= _gameplayEnabled && Input.GetKeyDown(KeyCode.Alpha3);
         // This project ships without an Input System action asset. Keep keyboard
         // input usable while preserving the configured action-map path.
         if (_actionMap == null)
@@ -276,6 +311,14 @@ public class InputManager : MonoSingleton<InputManager>
 #if !ENABLE_LEGACY_INPUT_MANAGER
         var keyboardType = Type.GetType("UnityEngine.InputSystem.Keyboard, Unity.InputSystem");
         var keyboard = keyboardType?.GetProperty("current", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+        EchoSlot1Pressed |= _gameplayEnabled && KeyPressed(keyboard, "digit1Key");
+        EchoSlot2Pressed |= _gameplayEnabled && KeyPressed(keyboard, "digit2Key");
+        EchoSlot3Pressed |= _gameplayEnabled && KeyPressed(keyboard, "digit3Key");
+        EchoPressed |= _gameplayEnabled && KeyPressed(keyboard, "eKey");
+        EchoSpeedPressed |= _gameplayEnabled && KeyPressed(keyboard, "tKey");
+        StartCombatPressed |= KeyPressed(keyboard, "enterKey") || KeyPressed(keyboard, "numpadEnterKey");
+        PausePressed = KeyPressed(keyboard, "escapeKey");
+        RestartPressed = KeyPressed(keyboard, "rKey");
         var f1 = keyboard != null ? keyboardType.GetProperty("f1Key")?.GetValue(keyboard) : null;
         if (f1 != null)
             QuickVictoryPressed = (bool)f1.GetType().GetProperty("wasPressedThisFrame").GetValue(f1);
@@ -286,6 +329,12 @@ public class InputManager : MonoSingleton<InputManager>
         if (button != null)
             CursorTogglePressed = (bool)button.GetType().GetProperty("wasPressedThisFrame").GetValue(button);
 #endif
+    }
+
+    private static bool KeyPressed(object keyboard, string name)
+    {
+        var key = keyboard?.GetType().GetProperty(name)?.GetValue(keyboard);
+        return key != null && (bool)key.GetType().GetProperty("wasPressedThisFrame").GetValue(key);
     }
 
 }

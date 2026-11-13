@@ -49,8 +49,17 @@ public class EchoModel : ModelBase
     public float cursor;
     public float levelDuration = 240f;
     public int echoLimit = int.MaxValue;
+    public float segmentLimitSeconds = 20;
+    public float cooldownSeconds = 20;
+    public float cooldownRemaining;
+    public string skillRunId;
+    public string selectedSegmentId;
+    public int recordingSlotIndex;
+    public readonly List<EchoSlotModel> slots = new List<EchoSlotModel>();
+    public readonly List<EchoPlaybackInstance> playbackInstances = new List<EchoPlaybackInstance>();
+    public EchoSegment SelectedSegment => segments.Find(s => s.id == selectedSegmentId);
     public int RemainingEchoes => Mathf.Max(0, echoLimit - segments.Count - (isRecording ? 1 : 0));
-    public bool CanCreateEcho => isPreparing && !isRecording && RemainingEchoes > 0 && cursor < levelDuration;
+    public bool CanCreateEcho => isPreparing && !isRecording && RemainingEchoes > 0;
     public float selectedSpeed = 1f;
     public bool isPreviewPlaying;
     public float EffectiveSpeed => isPreparing && (isRecording || isPreviewPlaying) ? selectedSpeed : 0f;
@@ -75,6 +84,11 @@ public class EchoModel : ModelBase
         cursor = 0;
         selectedSpeed = 1;
         echoLimit = int.MaxValue;
+        cooldownRemaining = 0;
+        skillRunId = selectedSegmentId = null;
+        recordingSlotIndex = 0;
+        slots.Clear();
+        playbackInstances.Clear();
         segments.Clear();
         isRecording = false;
         isPlaying = false;
@@ -84,6 +98,22 @@ public class EchoModel : ModelBase
         fireEvents.Clear();
         activeEchoes.Clear();
     }
+}
+
+[Serializable]
+public sealed class EchoSlotModel
+{
+    public int slotIndex; // Stable, one-based keyboard number.
+    public string segmentId;
+}
+
+public sealed class EchoPlaybackInstance
+{
+    public string instanceId, runId, segmentId;
+    public int slotIndex, shotIndex;
+    public float elapsed;
+    public EchoSegment segment;
+    public PlayerEchoActor actor;
 }
 
 [Serializable]

@@ -9,14 +9,16 @@ public sealed class LevelConfig : ScriptableObject
     public string levelId = "level_new";
     [Tooltip("下一关场景名或完整资源路径；留空表示最后一关。")] public string nextSceneName = "";
     [Min(.01f)] public float durationSeconds = 240;
-    [Min(0)] public int echoLimit = 5;
+    [HideInInspector] public int echoLimit = 5; // Legacy serialized data only; formal levels use echoSkill.
+    public EchoSkillConfig echoSkill;
     public NestConfigEntry[] nests = new NestConfigEntry[0];
 
     public void Validate()
     {
         Require(!string.IsNullOrWhiteSpace(levelId), "关卡 ID 不能为空。");
         Require(FiniteNonnegative(durationSeconds) && durationSeconds > 0, "关卡时长必须为正数且有限。");
-        Require(echoLimit >= 0, "回声总数不能为负数。");
+        Require(echoSkill != null, "请迁移关卡配置：绑定回声 2.0 技能资源（echoSkill），旧 echoLimit 已不生效。");
+        echoSkill.Validate();
         Require(nests != null, "巢穴列表不能为 null。");
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var nest in nests)

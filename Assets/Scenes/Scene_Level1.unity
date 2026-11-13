@@ -194,7 +194,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 240s
+  m_Text: 20s
 --- !u!222 &3520118
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -307,6 +307,7 @@ GameObject:
   - component: {fileID: 25945182}
   - component: {fileID: 25945184}
   - component: {fileID: 25945183}
+  - component: {fileID: 25945185}
   m_Layer: 0
   m_Name: Segment name
   m_TagString: Untagged
@@ -348,7 +349,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0.7, g: 0.95, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -367,7 +368,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Echo 1"
+  m_Text: Echo 1
 --- !u!222 &25945184
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1356,7 +1357,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "LEVEL 01 / ECHO PREPARATION"
+  m_Text: LEVEL 01 / ECHO PREPARATION
 --- !u!222 &136562394
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1950,7 +1951,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1371574941}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 240
+  m_MaxValue: 20
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -2613,7 +2614,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 192s
+  m_Text: 16s
 --- !u!222 &237866867
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3447,6 +3448,13 @@ MonoBehaviour:
     isPreparing: 0
     cursor: 0
     levelDuration: 240
+    echoLimit: 2147483647
+    segmentLimitSeconds: 20
+    cooldownSeconds: 20
+    cooldownRemaining: 0
+    skillRunId:
+    selectedSegmentId:
+    recordingSlotIndex: 0
     selectedSpeed: 1
     isPreviewPlaying: 0
     isRecording: 0
@@ -3465,7 +3473,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   poolSize: 4
-  preparationFireInterval: 0.18
 --- !u!1001 &337719599
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4443,7 +4450,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Play Preview"
+  m_Text: Play Preview
 --- !u!222 &424754403
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4891,7 +4898,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 144s
+  m_Text: 12s
 --- !u!222 &493493028
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5220,7 +5227,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Start Combat (Enter)"
+  m_Text: Start Combat (Enter)
 --- !u!222 &519943470
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5569,7 +5576,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Scrub to preview \u00b7 Play all echoes \u00b7 Delete only"
+  m_Text: "Click Echo to select \xB7 Scrub / Play clip \xB7 Delete"
 --- !u!222 &562710888
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -9236,7 +9243,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Delete"
+  m_Text: Delete
 --- !u!222 &803028459
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -10937,7 +10944,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Back to Login"
+  m_Text: Back to Login
 --- !u!222 &937210317
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -11138,6 +11145,10 @@ MonoBehaviour:
             collisionRadius: 0.035
             visualDiameter: 0.08
             material: {fileID: 2100000, guid: 0cacb596af2502f41916721cb72d8670, type: 2}
+        legacyFireInterval: -1
+        legacyDamage: -1
+        legacyRange: -1
+        legacySpread: -1
       ordinaryPrefab: {fileID: 1822319540956051251, guid: 0b7f02cd0c7917346a97a18070f702f5, type: 3}
       boss:
         health: 10000
@@ -11153,11 +11164,14 @@ MonoBehaviour:
             collisionRadius: 0.035
             visualDiameter: 0.08
             material: {fileID: 2100000, guid: 0cacb596af2502f41916721cb72d8670, type: 2}
+        legacyFireInterval: -1
+        legacyDamage: -1
+        legacyRange: -1
+        legacySpread: -1
       bossPrefab: {fileID: 1383566440131392796, guid: 98276e90dfd744e429de1ac2b873d91c, type: 3}
       bossSpawnPoints:
       - {fileID: 417451505}
       - {fileID: 1189394797}
-      waves: []
       nests:
       - nestId: nest_a
         prefab: {fileID: 0}
@@ -11180,6 +11194,12 @@ MonoBehaviour:
           collisionRadius: 0.035
           visualDiameter: 0.08
           material: {fileID: 2100000, guid: f2db672dc9d76614aaad1c24b14b6e5f, type: 2}
+      legacyPlayerDamage: -1
+      legacyPlayerFireInterval: -1
+      legacyProjectileSpeed: -1
+      legacyProjectileRange: -1
+      legacyPlayerMaterial: {fileID: 0}
+      legacyEnemyMaterial: {fileID: 0}
       weaponAttributesMigrated: 1
 --- !u!1001 &955152190
 PrefabInstance:
@@ -11476,7 +11496,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Echo Time 0.00s   Speed 0.0x\nClip 0.00 / 20s   Saved 0 Clips"
+  m_Text: 'Echo Time 0.00s   Speed 0.0x
+
+    Clip 0.00 / 20s   Saved 0 Clips'
 --- !u!222 &970548636
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12270,7 +12292,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "WASD Move \u00b7 Mouse Look\nE Record / Save \u00b7 T Speed\nLMB Fire \u00b7 RMB Cursor\nEnter Start \u00b7 R Restart"
+  m_Text: "WASD Move \xB7 Mouse Look\nE Record / Save \xB7 T Speed\nLMB Fire \xB7
+    RMB Cursor\nEnter Start \xB7 R Restart"
 --- !u!222 &1002466775
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14371,7 +14394,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Resume / Capture Mouse"
+  m_Text: Resume / Capture Mouse
 --- !u!222 &1234469678
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14530,7 +14553,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "WASD Move \u00b7 Mouse Look\nLMB Fire \u00b7 RMB Cursor\nESC Pause / Resume \u00b7 R Restart"
+  m_Text: "WASD Move \xB7 Mouse Look\nLMB Fire \xB7 RMB Cursor\n1 / 2 / 3 Activate
+    Echo\nESC Pause / Resume \xB7 R Restart"
 --- !u!222 &1246433695
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14889,7 +14913,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0.00s / 240s
+  m_Text: 0.00s / 0.00s
 --- !u!222 &1280312199
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15485,6 +15509,7 @@ RectTransform:
   - {fileID: 607787260}
   - {fileID: 1239787565}
   - {fileID: 662323194}
+  - {fileID: 364597209}
   m_Father: {fileID: 1654045341}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -15506,7 +15531,9 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   status: {fileID: 970548635}
+  echoSkillStatus: {fileID: 364597210}
   stageTitle: {fileID: 136562393}
+  levelTitle: LEVEL 01
   preparationHelp: {fileID: 1002466772}
   combatHelp: {fileID: 1246433692}
   controlButton: {fileID: 837829641}
@@ -15653,7 +15680,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Restart"
+  m_Text: Restart
 --- !u!222 &1360059363
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15718,6 +15745,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   label: {fileID: 25945183}
   deleteButton: {fileID: 707740655}
+  selectButton: {fileID: 25945185}
   segmentBar: {fileID: 882912287}
 --- !u!114 &1366032301
 MonoBehaviour:
@@ -16090,7 +16118,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 96s
+  m_Text: 8s
 --- !u!222 &1394722241
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -18557,7 +18585,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "No clips \u00b7 Press E to record an echo"
+  m_Text: "No clips \xB7 Press E to record an echo"
 --- !u!222 &1645183968
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -19079,7 +19107,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Create Echo (E)"
+  m_Text: Create Echo (E)
 --- !u!222 &1711468321
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -20261,7 +20289,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Echo Timeline"
+  m_Text: Echo Clips
 --- !u!222 &1803181364
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -21527,7 +21555,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Level Complete"
+  m_Text: Level Complete
 --- !u!222 &1977811982
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -23152,7 +23180,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 48s
+  m_Text: 4s
 --- !u!222 &2114615178
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -24163,3 +24191,127 @@ Transform:
   m_Father: {fileID: 1654045341}
   m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &25945185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 25945181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 25945183}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!1 &364597208
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 364597209}
+  - component: {fileID: 364597211}
+  - component: {fileID: 364597210}
+  m_Layer: 0
+  m_Name: Echo Skill Status
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &364597209
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 364597208}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1357371610}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.76, y: 0.76}
+  m_AnchorMax: {x: 0.97, y: 0.95}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &364597210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 364597208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.7, g: 0.95, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: fe53414cdcf77bc4991be77a098f9ba5, type: 3}
+    m_FontSize: 22
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: Echo Cooldown
+--- !u!222 &364597211
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 364597208}
+  m_CullTransparentMesh: 1

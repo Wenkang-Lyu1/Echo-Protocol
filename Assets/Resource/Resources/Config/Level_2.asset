@@ -16,6 +16,7 @@ MonoBehaviour:
   nextSceneName:
   durationSeconds: 270
   echoLimit: 6
+  echoSkill: {fileID: 11400000, guid: 8ea2217d665144e695bc1beca03b971c, type: 2}
   nests:
   - nestId: relay_north
     firstWaveTimeSeconds: 0

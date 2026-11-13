@@ -79,7 +79,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 96s
+  m_Text: 8s
 --- !u!1 &720478621903437184
 GameObject:
   m_ObjectHideFlags: 0
@@ -489,7 +489,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Restart"
+  m_Text: Restart
 --- !u!1 &1168929243913330084
 GameObject:
   m_ObjectHideFlags: 0
@@ -569,7 +569,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "LEVEL 01 / ECHO PREPARATION"
+  m_Text: LEVEL 01 / ECHO PREPARATION
 --- !u!1 &1540629730406827132
 GameObject:
   m_ObjectHideFlags: 0
@@ -973,7 +973,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 48s
+  m_Text: 4s
 --- !u!1 &2049799318276006930
 GameObject:
   m_ObjectHideFlags: 0
@@ -1209,7 +1209,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "WASD Move \u00b7 Mouse Look\nLMB Fire \u00b7 RMB Cursor\nESC Pause / Resume \u00b7 R Restart"
+  m_Text: "WASD Move \xB7 Mouse Look\nLMB Fire \xB7 RMB Cursor\n1 / 2 / 3 Activate
+    Echo\nESC Pause / Resume \xB7 R Restart"
 --- !u!1 &3154934519271907902
 GameObject:
   m_ObjectHideFlags: 0
@@ -1289,7 +1290,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Resume / Capture Mouse"
+  m_Text: Resume / Capture Mouse
 --- !u!1 &3155971378340076661
 GameObject:
   m_ObjectHideFlags: 0
@@ -1369,7 +1370,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Echo Timeline"
+  m_Text: Echo Clips
 --- !u!1 &3220462767524032667
 GameObject:
   m_ObjectHideFlags: 0
@@ -1449,7 +1450,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Level Complete"
+  m_Text: Level Complete
 --- !u!1 &3369856335302768958
 GameObject:
   m_ObjectHideFlags: 0
@@ -1529,7 +1530,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Echo Time 0.00s   Speed 0.0x\nClip 0.00 / 20s   Saved 0 Clips"
+  m_Text: 'Echo Time 0.00s   Speed 0.0x
+
+    Clip 0.00 / 20s   Saved 0 Clips'
 --- !u!1 &3384159360198131165
 GameObject:
   m_ObjectHideFlags: 0
@@ -1810,7 +1813,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Play Preview"
+  m_Text: Play Preview
 --- !u!1 &3819391026682508512
 GameObject:
   m_ObjectHideFlags: 0
@@ -1925,6 +1928,7 @@ RectTransform:
   - {fileID: 3700484143815927532}
   - {fileID: 2163270158040799858}
   - {fileID: 2445900855510250997}
+  - {fileID: 6271662696685666653}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2007,7 +2011,9 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   status: {fileID: 6205379892559267323}
+  echoSkillStatus: {fileID: 4674791013380345472}
   stageTitle: {fileID: 3990331220901612425}
+  levelTitle: LEVEL 01
   preparationHelp: {fileID: 8127659293793211838}
   combatHelp: {fileID: 2809175303642387828}
   controlButton: {fileID: 8355341279190816747}
@@ -2101,7 +2107,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Scrub to preview \u00b7 Play all echoes \u00b7 Delete only"
+  m_Text: "Click Echo to select \xB7 Scrub / Play clip \xB7 Delete"
 --- !u!1 &4639922589589729503
 GameObject:
   m_ObjectHideFlags: 0
@@ -2464,7 +2470,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 3575190468742434520}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 240
+  m_MaxValue: 20
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -2873,7 +2879,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Start Combat (Enter)"
+  m_Text: Start Combat (Enter)
 --- !u!1 &6200331118044332153
 GameObject:
   m_ObjectHideFlags: 0
@@ -3075,7 +3081,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0.00s / 240s
+  m_Text: 0.00s / 0.00s
 --- !u!1 &6382548214506518155
 GameObject:
   m_ObjectHideFlags: 0
@@ -3277,7 +3283,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Create Echo (E)"
+  m_Text: Create Echo (E)
 --- !u!1 &6489168874316770385
 GameObject:
   m_ObjectHideFlags: 0
@@ -3357,7 +3363,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 144s
+  m_Text: 12s
 --- !u!1 &6751889720719833426
 GameObject:
   m_ObjectHideFlags: 0
@@ -3437,7 +3443,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 192s
+  m_Text: 16s
 --- !u!1 &6882986772335297781
 GameObject:
   m_ObjectHideFlags: 0
@@ -3517,7 +3523,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 240s
+  m_Text: 20s
 --- !u!1 &6997879014711808679
 GameObject:
   m_ObjectHideFlags: 0
@@ -3609,6 +3615,7 @@ GameObject:
   - component: {fileID: 3910033209684528642}
   - component: {fileID: 6562048957427193776}
   - component: {fileID: 6707218102362676461}
+  - component: {fileID: 620783590877532555}
   m_Layer: 0
   m_Name: Segment name
   m_TagString: Untagged
@@ -3658,7 +3665,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0.7, g: 0.95, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -3677,7 +3684,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Echo 1"
+  m_Text: Echo 1
 --- !u!1 &7206520210831095807
 GameObject:
   m_ObjectHideFlags: 0
@@ -3913,7 +3920,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Back to Login"
+  m_Text: Back to Login
 --- !u!1 &7726695017986716242
 GameObject:
   m_ObjectHideFlags: 0
@@ -4107,7 +4114,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "WASD Move \u00b7 Mouse Look\nE Record / Save \u00b7 T Speed\nLMB Fire \u00b7 RMB Cursor\nEnter Start \u00b7 R Restart"
+  m_Text: "WASD Move \xB7 Mouse Look\nE Record / Save \xB7 T Speed\nLMB Fire \xB7
+    RMB Cursor\nEnter Start \xB7 R Restart"
 --- !u!1 &8769189601925611437
 GameObject:
   m_ObjectHideFlags: 0
@@ -4202,6 +4210,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   label: {fileID: 6707218102362676461}
   deleteButton: {fileID: 622635588953981324}
+  selectButton: {fileID: 620783590877532555}
   segmentBar: {fileID: 3956463981991138746}
 --- !u!1 &8783389817278196432
 GameObject:
@@ -4282,7 +4291,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "No clips \u00b7 Press E to record an echo"
+  m_Text: "No clips \xB7 Press E to record an echo"
 --- !u!1 &8918687428437767144
 GameObject:
   m_ObjectHideFlags: 0
@@ -4484,4 +4493,128 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Delete"
+  m_Text: Delete
+--- !u!1 &1966987081327322235
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6271662696685666653}
+  - component: {fileID: 689162815271528280}
+  - component: {fileID: 4674791013380345472}
+  m_Layer: 0
+  m_Name: Echo Skill Status
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &6271662696685666653
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1966987081327322235}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5818305930871771811}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.76, y: 0.76}
+  m_AnchorMax: {x: 0.97, y: 0.95}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &689162815271528280
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1966987081327322235}
+  m_CullTransparentMesh: 1
+--- !u!114 &4674791013380345472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1966987081327322235}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.7, g: 0.95, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: fe53414cdcf77bc4991be77a098f9ba5, type: 3}
+    m_FontSize: 22
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: Echo Cooldown
+--- !u!114 &620783590877532555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7114073583039529867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 6707218102362676461}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []

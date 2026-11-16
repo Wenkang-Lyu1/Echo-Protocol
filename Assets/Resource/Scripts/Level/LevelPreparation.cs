@@ -28,7 +28,8 @@ public partial class LevelControl
         preparation.levelConfig.Validate();
         if (preparation.combat == null || preparation.combat.bossPrefab == null)
             throw new InvalidOperationException("Formal combat configuration is incomplete.");
-        foreach (var stats in new[] { preparation.combat.ordinary, preparation.combat.boss })
+        foreach (var stats in UsesNodeObjectives ? new[] { preparation.combat.ordinary, preparation.combat.boss,
+            preparation.combat.nodeGuard, preparation.combat.nodeBoss, preparation.combat.hunter } : new[] { preparation.combat.ordinary, preparation.combat.boss })
         {
             if (stats == null || stats.health <= 0 || stats.speed <= 0 ||
                 float.IsNaN(stats.health + stats.speed) || float.IsInfinity(stats.health + stats.speed))
@@ -41,6 +42,7 @@ public partial class LevelControl
         ValidateNestBindings();
         foreach (var enemy in preparation.enemies)
             if (InitialEnemy(enemy) == null) throw new InvalidOperationException("EnemyActor is missing from a formal enemy.");
+        ValidateNodeBindings();
         _preparationInput = InputManager.Instance;
         var eventSystem = UnityEngine.EventSystems.EventSystem.current;
         if (eventSystem != null && eventSystem.gameObject.scene != gameObject.scene)
@@ -64,6 +66,7 @@ public partial class LevelControl
         if (!usePreparation || preparation == null || _loadingNextLevel) return;
         Configuration.Validate();
         ValidateNestBindings();
+        ValidateNodeBindings();
         CleanupPreparation();
         GameManager.Instance.SetState(GameState.Playing);
         model.Reset();
@@ -72,7 +75,9 @@ public partial class LevelControl
         _waveTimer = _intervalTimer = 0;
         model.runId = Guid.NewGuid().ToString("N");
         model.durationSeconds = preparation.DurationSeconds;
+        ResetNodes();
         preparation.player.ResetState();
+        preparation.player.BindHealthOwner(this, model.runId);
         preparation.player.ResetPose(_bodySpawn, _bodyRotation);
         _playerWeapon.Configure(this, new ProjectileOwner(model.runId, preparation.player.gameObject, ProjectileSource.Player), preparation.combat.PlayerWeapon);
         preparation.echo.SetRecordingWeapon(_playerWeapon);
@@ -80,7 +85,8 @@ public partial class LevelControl
             preparation.shadowMaterial, preparation.effectsRoot, preparation.DurationSeconds, Configuration.echoSkill);
         foreach (var enemy in preparation.enemies)
         {
-            InitialEnemy(enemy).ResetForRun(this, model.runId, preparation.player, preparation.combat.ordinary);
+            var actor = InitialEnemy(enemy);
+            actor.ResetForRun(this, model.runId, preparation.player, preparation.combat.StatsFor(actor.assignment.role));
             enemy.Freeze(preparation.enemyShadowMaterial);
             model.enemyInstanceIds.Add(enemy.GetInstanceID());
         }

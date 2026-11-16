@@ -22,9 +22,13 @@ public class EnemyActor : CharacterActor, IDamageable
     public NavMeshAgent Agent { get; private set; }
     public WeaponActor Weapon { get; private set; }
     public bool IsShooting => _actions != null && _actions.IsShooting;
-    private LevelControl _owner;
-    private PlayerControl _target;
-    private EnemyCombatStats _stats;
+    public EnemyAssignment assignment = new EnemyAssignment();
+    protected LevelControl Owner;
+    protected PlayerControl Target;
+    protected EnemyCombatStats Stats;
+    private Vector3 _home;
+    private int _patrolIndex;
+    private bool _alert;
     private Vector3 _spawn;
     private Quaternion _spawnRotation;
     private Renderer[] _renderers;
@@ -49,7 +53,8 @@ public class EnemyActor : CharacterActor, IDamageable
     public void ResetForRun(LevelControl owner, string runId, PlayerControl target, EnemyCombatStats stats)
     {
         Cache(); SetRunning(false); Agent.enabled = false;
-        _owner = owner; _target = target; _stats = stats;
+        Owner = owner; Target = target; Stats = stats;
+        _home = _spawn; _patrolIndex = 0; _alert = false;
         Model = new CombatEnemyModel { runId = runId, instanceId = gameObject.GetInstanceID(), hp = stats.health };
         transform.SetPositionAndRotation(_spawn, _spawnRotation);
         for (int i = 0; i < _renderers.Length; i++) _renderers[i].enabled = _visible[i];
@@ -69,18 +74,18 @@ public class EnemyActor : CharacterActor, IDamageable
     {
         Agent.enabled = true;
         if (!Agent.Warp(position)) throw new InvalidOperationException("Enemy cannot enter navigation mesh: " + name);
-        Agent.speed = _stats.speed; Agent.acceleration = 40; Agent.angularSpeed = 720;
+        Agent.speed = Stats.speed; Agent.acceleration = 40; Agent.angularSpeed = 720;
         Agent.stoppingDistance = IsBoss ? 3 : 5;
         Agent.updateRotation = false;
         SetRunning(true);
     }
 
-    public void SetRunning(bool running)
+    public virtual void SetRunning(bool running)
     {
         if (Agent == null) return;
         running &= !IsDead;
         float multiplier = IsShooting && Weapon != null && Weapon.Attributes != null ? Weapon.Attributes.shootingMoveMultiplier : 1;
-        if (_stats != null) Agent.speed = _stats.speed * multiplier;
+        if (Stats != null) Agent.speed = Stats.speed * multiplier;
         if (Agent.enabled && Agent.isOnNavMesh)
         {
             Agent.isStopped = !running || multiplier <= 0;
@@ -89,52 +94,80 @@ public class EnemyActor : CharacterActor, IDamageable
         }
     }
 
-    public void Tick(float dt)
+    public virtual void Tick(float dt)
     {
-        bool live = _owner != null && _owner.IsCurrentCombat(Model.runId) && !IsDead && _target != null && !_target.IsDead;
+        bool live = Owner != null && Owner.IsCurrentCombat(Model.runId) && !IsDead && Target != null && !Target.IsDead;
         SetRunning(live);
         if (!live || dt <= 0) return;
-        if (Agent.enabled && Agent.isOnNavMesh) Agent.SetDestination(_target.transform.position);
-        var targetPoint = _target.transform.position + Vector3.up * .9f;
+        bool engage = ResolveDuty(out var destination);
+        if (Agent.enabled && Agent.isOnNavMesh) Agent.SetDestination(destination);
+        var targetPoint = (engage ? Target.transform.position : destination) + Vector3.up * .9f;
         var offset = targetPoint - transform.position;
         var flat = new Vector3(offset.x, 0, offset.z);
         if (flat.sqrMagnitude > .01f) transform.rotation = Quaternion.LookRotation(-flat);
-        _actions.Tick(dt, PresentationSpeed, _stats.speed);
+        _actions.Tick(dt, PresentationSpeed, Stats.speed);
         SetRunning(live);
-        Model.shotsFired += Weapon.TickAutomatic(dt, targetPoint, HasLineOfSight, PrepareWeaponShot);
+        if (engage) Model.shotsFired += Weapon.TickAutomatic(dt, targetPoint, HasLineOfSight, PrepareWeaponShot);
+        else Weapon.Model.fireAccumulator = 0;
     }
 
-    private void PrepareWeaponShot()
+    private bool ResolveDuty(out Vector3 destination)
+    {
+        destination = Target.transform.position;
+        if (assignment.role == EnemyRole.Pursuer || assignment.role == EnemyRole.Hunter) return true;
+        float distance = Vector3.Distance(transform.position, Target.transform.position);
+        bool visible = distance <= assignment.detectionRadius && HasLineOfSight(transform.position + Vector3.up, Target.transform.position + Vector3.up * .9f - (transform.position + Vector3.up));
+        if (visible) _alert = true;
+        if (Vector3.Distance(Target.transform.position, _home) > assignment.leashRadius + assignment.detectionRadius) _alert = false;
+        if (assignment.role == EnemyRole.Patrol)
+        {
+            if (_alert && Vector3.Distance(transform.position, _home) <= assignment.leashRadius) { Agent.stoppingDistance = 5; return true; }
+            _alert = false;
+            var points = assignment.patrolPoints;
+            destination = points != null && points.Length > 0 && points[_patrolIndex % points.Length] != null ? points[_patrolIndex % points.Length].position : _home;
+            if (Vector3.Distance(transform.position, destination) < 1 && points != null && points.Length > 0) _patrolIndex = (_patrolIndex + 1) % points.Length;
+            Agent.stoppingDistance = .4f;
+            return false;
+        }
+        Agent.stoppingDistance = 3;
+        if (distance > assignment.detectionRadius || Vector3.Distance(transform.position, _home) > assignment.guardRadius || !_alert)
+        { destination = _home; return false; }
+        destination = _home + Vector3.ClampMagnitude(Target.transform.position - _home, assignment.guardRadius * .8f);
+        return distance <= assignment.detectionRadius;
+    }
+
+    protected void PrepareWeaponShot()
     {
         _actions.OnShot();
         SetRunning(true);
-        _actions.Tick(0, PresentationSpeed, _stats.speed);
+        _actions.Tick(0, PresentationSpeed, Stats.speed);
     }
 
     // NavMeshAgent.velocity reports the last simulation step until navigation updates.
     private float PresentationSpeed => Agent.isStopped ? 0 : Mathf.Min(Agent.velocity.magnitude, Agent.speed);
+    protected void TickPose(float dt) => _actions.Tick(dt, PresentationSpeed, Stats.speed);
 
-    private bool HasLineOfSight(Vector3 origin, Vector3 offset)
+    protected bool HasLineOfSight(Vector3 origin, Vector3 offset)
     {
         var hits = Physics.RaycastAll(origin, offset.normalized, offset.magnitude, ~0, QueryTriggerInteraction.Ignore);
         Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
         foreach (var hit in hits)
         {
             if (hit.collider.GetComponentInParent<EnemyActor>() != null) continue;
-            return hit.collider.GetComponentInParent<PlayerControl>() == _target;
+            return hit.collider.GetComponentInParent<PlayerControl>() == Target;
         }
         return true;
     }
 
-    public void ApplyDamage(float damage)
+    public virtual void ApplyDamage(float damage)
     {
-        if (IsDead || _owner == null || !_owner.IsCurrentCombat(Model.runId) || float.IsNaN(damage) || damage <= 0) return;
+        if (IsDead || Owner == null || !Owner.IsCurrentCombat(Model.runId) || float.IsNaN(damage) || float.IsInfinity(damage) || damage <= 0) return;
         Model.hp = Mathf.Max(0, Model.hp - damage);
         if (Model.hp > 0) { _actions.OnHit(); return; }
         Model.isDead = true; SetRunning(false);
         for (int i = 0; i < _colliders.Length; i++) _colliders[i].enabled = false;
         _actions.OnDeath();
-        _owner.NotifyEnemyDeath(Model.runId, Model.instanceId);
+        Owner.NotifyEnemyDeath(Model.runId, Model.instanceId);
     }
 
     public bool TickDeathPresentation(float dt)

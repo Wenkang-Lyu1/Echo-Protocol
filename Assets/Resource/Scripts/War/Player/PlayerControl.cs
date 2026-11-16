@@ -27,6 +27,9 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
     private CharacterController _cc;
     private CharacterMotor _motor;
     private float _invincibleTimer;
+    private LevelControl _healthOwner;
+    private string _healthRun;
+    public void BindHealthOwner(LevelControl owner, string runId) { _healthOwner = owner; _healthRun = runId; }
 
     public Transform CameraPivot => cameraPivot;
     public void SetRecoilWeapon(WeaponControl weapon) => recoilWeapon = weapon;
@@ -92,10 +95,14 @@ public class PlayerControl : GlobalControl<PlayerControl, PlayerModel>, IDamagea
         // ---- Public Interface ----
     public void ApplyDamage(float damage)
     {
-        if (model.isDead || _invincibleTimer > 0f) return;
+        if (model.isDead || _invincibleTimer > 0f || float.IsNaN(damage) || float.IsInfinity(damage) || damage <= 0) return;
 
+        float before = model.hp;
         model.hp = Mathf.Max(0f, model.hp - damage);
+        if (model.hp >= before) return;
         _invincibleTimer = 0.5f;
+        // Direct notification precedes broadcasts: hurt listeners may heal in the same frame.
+        if (_healthOwner != null) _healthOwner.NotifyPlayerHealthLost(this, _healthRun);
 
         EventCenter.Instance.Dispatch(new GameEventArgs
         {

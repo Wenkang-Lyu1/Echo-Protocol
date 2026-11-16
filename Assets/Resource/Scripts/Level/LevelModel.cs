@@ -32,6 +32,8 @@ public class LevelModel : ModelBase
     public bool normalSpawningComplete;
     public LevelResult result;
     public string runtimeError;
+    public MissionStage mission;
+    public System.Collections.Generic.List<UploadNodeModel> nodes = new System.Collections.Generic.List<UploadNodeModel>();
     public float RemainingTime => Mathf.Max(0, durationSeconds - combatElapsed);
     public System.Collections.Generic.List<int> enemyInstanceIds = new System.Collections.Generic.List<int>();
 
@@ -50,6 +52,8 @@ public class LevelModel : ModelBase
         normalSpawningComplete = false;
         result = LevelResult.None;
         runtimeError = null;
+        mission = MissionStage.None;
+        nodes.Clear();
         enemyInstanceIds.Clear();
     }
 }
@@ -57,6 +61,15 @@ public class LevelModel : ModelBase
 public enum LevelPhase { Idle, EchoPreparation, Combat, Ended }
 public enum LevelResult { None, Victory, Defeat }
 public enum BossSpawnState { Pending, Spawning, Active, Defeated }
+public enum MissionStage { None, Upload, NormalExtraction, Breakout, EmergencyExtraction }
+public enum UploadNodeState { Available, Uploading, Uploaded, Destroyed }
+[Serializable]
+public sealed class UploadNodeModel
+{
+    public string nodeId;
+    public UploadNodeState state;
+    public float progress;
+}
 
 public enum LevelObjective
 {

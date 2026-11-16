@@ -14,23 +14,44 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   levelId: level_1
   nextSceneName: Assets/Scenes/Scene_Level2.unity
-  durationSeconds: 240
+  durationSeconds: 210
   echoLimit: 5
   echoSkill: {fileID: 11400000, guid: 8ea2217d665144e695bc1beca03b971c, type: 2}
+  useNodeObjectives: 1
+  nodeIds:
+  - outpost_link
+  - outpost_uplink
+  destructionBossHealth: 900
+  purgeBoss:
+    warningSeconds: 1.6
+    sweepSeconds: 2.4
+    sweepArc: 65
+    chargeWarningSeconds: 1
+    chargeSeconds: 0.85
+    chargeDistance: 11
+    chargeDamage: 12
+    exposedSeconds: 4
+    exposedDamageMultiplier: 1.75
   nests:
   - nestId: nest_a
-    firstWaveTimeSeconds: 0
+    firstWaveTimeSeconds: 26
+    maxAliveEnemies: 1
+    randomizeSpawnPoints: 1
     waves:
-    - enemyCount: 3
+    - enemyCount: 1
       delayAfterPreviousClearSeconds: 0
-    - enemyCount: 5
-      delayAfterPreviousClearSeconds: 10
-    - enemyCount: 8
-      delayAfterPreviousClearSeconds: 15
-  - nestId: nest_b
-    firstWaveTimeSeconds: 30
-    waves:
+      spawnIntervalSeconds: 3
     - enemyCount: 2
+      delayAfterPreviousClearSeconds: 26
+      spawnIntervalSeconds: 3.5
+  - nestId: nest_b
+    firstWaveTimeSeconds: 56
+    maxAliveEnemies: 1
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 1
       delayAfterPreviousClearSeconds: 0
-    - enemyCount: 4
-      delayAfterPreviousClearSeconds: 12
+      spawnIntervalSeconds: 3
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 26
+      spawnIntervalSeconds: 3.5

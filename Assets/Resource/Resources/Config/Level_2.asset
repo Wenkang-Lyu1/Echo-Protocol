@@ -14,54 +14,67 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   levelId: level_2
   nextSceneName:
-  durationSeconds: 270
+  durationSeconds: 195
   echoLimit: 6
   echoSkill: {fileID: 11400000, guid: 8ea2217d665144e695bc1beca03b971c, type: 2}
+  useNodeObjectives: 1
+  nodeIds:
+  - west_relay
+  - east_relay
+  - bridge_uplink
+  destructionBossHealth: 1500
+  purgeBoss:
+    warningSeconds: 1.2
+    sweepSeconds: 2.4
+    sweepArc: 65
+    chargeWarningSeconds: 1
+    chargeSeconds: 0.85
+    chargeDistance: 11
+    chargeDamage: 20
+    exposedSeconds: 3.2
+    exposedDamageMultiplier: 1.75
   nests:
   - nestId: relay_north
-    firstWaveTimeSeconds: 0
-    maxAliveEnemies: 3
-    randomizeSpawnPoints: 1
-    waves:
-    - enemyCount: 3
-      delayAfterPreviousClearSeconds: 0
-      spawnIntervalSeconds: 2.4
-    - enemyCount: 4
-      delayAfterPreviousClearSeconds: 14
-      spawnIntervalSeconds: 2.4
-    - enemyCount: 4
-      delayAfterPreviousClearSeconds: 18
-      spawnIntervalSeconds: 2.2
-  - nestId: gallery_west
-    firstWaveTimeSeconds: 18
+    firstWaveTimeSeconds: 12
     maxAliveEnemies: 2
     randomizeSpawnPoints: 1
     waves:
     - enemyCount: 2
       delayAfterPreviousClearSeconds: 0
       spawnIntervalSeconds: 3
-    - enemyCount: 3
-      delayAfterPreviousClearSeconds: 20
-      spawnIntervalSeconds: 3
-  - nestId: cargo_east
-    firstWaveTimeSeconds: 35
-    maxAliveEnemies: 2
-    randomizeSpawnPoints: 1
-    waves:
-    - enemyCount: 3
-      delayAfterPreviousClearSeconds: 0
-      spawnIntervalSeconds: 2.8
-    - enemyCount: 3
-      delayAfterPreviousClearSeconds: 22
-      spawnIntervalSeconds: 2.8
-  - nestId: service_south
-    firstWaveTimeSeconds: 58
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 18
+      spawnIntervalSeconds: 3.5
+  - nestId: gallery_west
+    firstWaveTimeSeconds: 26
     maxAliveEnemies: 1
     randomizeSpawnPoints: 1
     waves:
     - enemyCount: 2
       delayAfterPreviousClearSeconds: 0
-      spawnIntervalSeconds: 3.5
+      spawnIntervalSeconds: 3
     - enemyCount: 2
-      delayAfterPreviousClearSeconds: 24
+      delayAfterPreviousClearSeconds: 18
+      spawnIntervalSeconds: 3.5
+  - nestId: cargo_east
+    firstWaveTimeSeconds: 40
+    maxAliveEnemies: 1
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 0
+      spawnIntervalSeconds: 3
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 18
+      spawnIntervalSeconds: 3.5
+  - nestId: service_south
+    firstWaveTimeSeconds: 54
+    maxAliveEnemies: 1
+    randomizeSpawnPoints: 1
+    waves:
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 0
+      spawnIntervalSeconds: 3
+    - enemyCount: 2
+      delayAfterPreviousClearSeconds: 18
       spawnIntervalSeconds: 3.5

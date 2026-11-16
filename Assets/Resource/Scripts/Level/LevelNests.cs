@@ -46,6 +46,8 @@ public partial class LevelControl
 
     private void TickNests()
     {
+        // Overtime stops new reinforcements; existing enemies remain in the arena.
+        if (UsesNodeObjectives && model.RemainingTime <= 0) return;
         foreach (var nest in _nestSchedules)
         {
             if (_nestRetries.TryGetValue(nest.NestId, out float retry) && model.combatElapsed < retry) continue;
@@ -81,7 +83,8 @@ public partial class LevelControl
             var prefab = binding.prefab != null ? binding.prefab : preparation.combat.ordinaryPrefab;
             created = Instantiate(prefab, nav.position, point.rotation, preparation.effectsRoot);
             created.name = nest.NestId + " - Wave " + nest.CurrentWave + " - Enemy " + (index + 1);
-            created.ResetForRun(this, model.runId, preparation.player, preparation.combat.ordinary);
+            if (UsesNodeObjectives) created.assignment = new EnemyAssignment { role = EnemyRole.Hunter };
+            created.ResetForRun(this, model.runId, preparation.player, preparation.combat.StatsFor(created.assignment.role));
             created.Activate(nav.position);
             RegisterEnemy(created); _dynamicEnemies.Add(created);
             _enemyNests.Add(created.Model.instanceId, nest);

@@ -48,6 +48,11 @@ public sealed class CombatConfig : ISerializationCallbackReceiver
 {
     public EnemyCombatStats ordinary = new EnemyCombatStats();
     public EnemyActor ordinaryPrefab;
+    public EnemyCombatStats nodeGuard = new EnemyCombatStats();
+    public EnemyCombatStats hunter = new EnemyCombatStats();
+    public EnemyCombatStats nodeBoss = new EnemyCombatStats { health = 350, speed = 2.5f };
+    public EnemyCombatStats StatsFor(EnemyRole role) => role == EnemyRole.NodeGuard ? nodeGuard :
+        role == EnemyRole.NodeBoss ? nodeBoss : role == EnemyRole.Hunter ? hunter : ordinary;
     public EnemyCombatStats boss = new EnemyCombatStats { health = 10000, speed = 7,
         weapon = new WeaponAttributes { fireInterval = .06f, spreadDegrees = 5, shootingMoveMultiplier = .7f,
             projectile = new ProjectileAttributes { damage = 12, range = 60 } } };

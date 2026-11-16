@@ -6,6 +6,11 @@ public sealed class U_Level_MainView : UIViewBase
     [SerializeField] private Text status;
     [SerializeField] private Text echoSkillStatus;
     [SerializeField] private Text stageTitle;
+    [SerializeField] private Text objectiveStatus;
+    [SerializeField] private Image uploadProgress;
+    [SerializeField] private Image purgeFlash;
+    [SerializeField] private RectTransform informationPanel, preparationPanelFrame, combatPanelFrame;
+    [SerializeField] private RectTransform preparationStatusFrame, combatStatusFrame;
     [SerializeField] private string levelTitle = "LEVEL 01";
     [SerializeField] private GameObject preparationHelp, combatHelp;
     [SerializeField] private Button controlButton;
@@ -14,6 +19,7 @@ public sealed class U_Level_MainView : UIViewBase
     [SerializeField] private U_Level_TimelineSV timeline;
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button startButton, restartButton, exitButton;
+    [SerializeField] private Button nextLevelButton;
     [SerializeField] private GameObject resultPanel;
     [SerializeField] private Text resultText;
     private LevelControl _owner;
@@ -37,6 +43,7 @@ public sealed class U_Level_MainView : UIViewBase
         startButton.onClick.AddListener(StartCombat);
         restartButton.onClick.AddListener(Restart);
         exitButton.onClick.AddListener(Exit);
+        if (nextLevelButton != null) nextLevelButton.onClick.AddListener(NextLevel);
     }
     protected override void _Dispose()
     {
@@ -48,6 +55,7 @@ public sealed class U_Level_MainView : UIViewBase
         startButton.onClick.RemoveListener(StartCombat);
         restartButton.onClick.RemoveListener(Restart);
         exitButton.onClick.RemoveListener(Exit);
+        if (nextLevelButton != null) nextLevelButton.onClick.RemoveListener(NextLevel);
     }
     private void Toggle()
     {
@@ -65,6 +73,7 @@ public sealed class U_Level_MainView : UIViewBase
     private void StartCombat() => _owner.StartCombat();
     private void Restart() => _owner.RestartPreparation();
     private void Exit() => _owner.ExitLevel();
+    private void NextLevel() => _owner.CompleteAndAdvance();
     protected override void OnRefresh()
     {
         var m = _model as EchoModel;
@@ -72,6 +81,8 @@ public sealed class U_Level_MainView : UIViewBase
         var level = _owner.GetModel();
         bool preparing = level.phase == LevelPhase.EchoPreparation || level.phase == LevelPhase.Idle;
         bool ended = level.phase == LevelPhase.Ended;
+        Mount(informationPanel, preparing ? preparationPanelFrame : combatPanelFrame);
+        Mount(status.rectTransform, preparing ? preparationStatusFrame : combatStatusFrame);
         stageTitle.text = levelTitle + (preparing ? " / ECHO PREPARATION" : ended ? " / COMBAT ENDED" : GameManager.Instance.IsPaused ? " / PAUSED" : " / COMBAT");
         preparationHelp.SetActive(preparing); combatHelp.SetActive(!preparing);
         timeline.gameObject.SetActive(preparing);
@@ -91,14 +102,28 @@ public sealed class U_Level_MainView : UIViewBase
         controlButton.gameObject.SetActive(preparing);
         speed01.gameObject.SetActive(preparing); speed03.gameObject.SetActive(preparing); speed1.gameObject.SetActive(preparing);
         resultPanel.SetActive(ended);
+        if (nextLevelButton != null) nextLevelButton.gameObject.SetActive(ended && level.result == LevelResult.Victory && !string.IsNullOrWhiteSpace(_owner.Configuration.nextSceneName));
+        if (purgeFlash != null)
+        {
+            float strength = !preparing && !ended ? _owner.PurgePulseStrength : 0;
+            purgeFlash.color = new Color(1, .18f, .08f, strength * .28f);
+            purgeFlash.gameObject.SetActive(strength > 0);
+        }
+        if (objectiveStatus != null)
+        {
+            objectiveStatus.transform.parent.gameObject.SetActive(_owner.UsesNodeObjectives && !ended);
+            objectiveStatus.text = preparing ? "Prepare echoes near the relays.\nEnter to begin / Stay in each relay ring.\nDamage or leaving the ring resets upload." : _owner.NodeObjectiveText().TrimStart();
+            if (uploadProgress != null) uploadProgress.fillAmount = _owner.UploadProgressRatio;
+        }
         if (ended)
             resultText.text = (level.result == LevelResult.Victory ? "VICTORY" : "DEFEAT") + $"\nEnemies defeated: {level.killCount}\nCombat time: {level.combatElapsed:0.0}s";
         if (!preparing)
         {
             float remaining = level.RemainingTime;
             status.text = $"Time {(int)(remaining / 60):00}:{(int)(remaining % 60):00}\nHP {_owner.CombatPlayer.Hp:0} / 100 · Enemies {level.aliveEnemyCount}";
+            if (objectiveStatus == null) status.text += _owner.NodeObjectiveText();
             if (level.bossState == BossSpawnState.Spawning) status.text += "\nRetrying boss spawn...";
-            else if (level.bossSpawned && _owner.BossHealth > 0) status.text += $"\nDestruction Boss {_owner.BossHealth:0} / 10000";
+            else if (level.bossSpawned && _owner.BossHealth > 0) status.text += $"\nPurge Unit {_owner.BossHealth:0} / {_owner.Configuration.destructionBossHealth:0} · {_owner.BossActionText}";
             resumeButton.gameObject.SetActive(!ended && (!_owner.Captured || GameManager.Instance.IsPaused));
             return;
         }
@@ -113,5 +138,13 @@ public sealed class U_Level_MainView : UIViewBase
         speed1.interactable = m.selectedSpeed != 1;
         timeline.Refresh();
         resumeButton.gameObject.SetActive(!_owner.Captured);
+    }
+
+    // Both layouts are authored in UGUI; switching phase only selects the appropriate mount.
+    private static void Mount(RectTransform content, RectTransform frame)
+    {
+        if (content == null || frame == null || content.parent == frame) return;
+        content.SetParent(frame, false); content.anchorMin = Vector2.zero; content.anchorMax = Vector2.one;
+        content.offsetMin = content.offsetMax = Vector2.zero;
     }
 }

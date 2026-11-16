@@ -11,6 +11,10 @@ public sealed class LevelConfig : ScriptableObject
     [Min(.01f)] public float durationSeconds = 240;
     [HideInInspector] public int echoLimit = 5; // Legacy serialized data only; formal levels use echoSkill.
     public EchoSkillConfig echoSkill;
+    public bool useNodeObjectives;
+    public string[] nodeIds = new string[0];
+    [Min(1)] public float destructionBossHealth = 1400;
+    public PurgeBossConfig purgeBoss = new PurgeBossConfig();
     public NestConfigEntry[] nests = new NestConfigEntry[0];
 
     public void Validate()
@@ -19,6 +23,15 @@ public sealed class LevelConfig : ScriptableObject
         Require(FiniteNonnegative(durationSeconds) && durationSeconds > 0, "关卡时长必须为正数且有限。");
         Require(echoSkill != null, "请迁移关卡配置：绑定回声 2.0 技能资源（echoSkill），旧 echoLimit 已不生效。");
         echoSkill.Validate();
+        if (useNodeObjectives)
+        {
+            Require(nodeIds != null && nodeIds.Length > 0, "节点关卡必须配置节点 ID。");
+            var nodeSet = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var id in nodeIds) Require(!string.IsNullOrWhiteSpace(id) && nodeSet.Add(id), "节点 ID 不能为空或重复。");
+            Require(FiniteNonnegative(destructionBossHealth) && destructionBossHealth > 0, "毁灭 Boss 生命必须为正数且有限。");
+            Require(purgeBoss != null, "毁灭 Boss 行为配置缺失。");
+            purgeBoss.Validate();
+        }
         Require(nests != null, "巢穴列表不能为 null。");
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var nest in nests)

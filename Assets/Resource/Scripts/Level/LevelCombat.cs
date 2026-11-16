@@ -17,6 +17,7 @@ public partial class LevelControl
     private PlayerEchoActor _playerShotView;
     public PlayerControl CombatPlayer => preparation.player;
     public float BossHealth => _boss != null ? _boss.Hp : 0;
+    public string BossActionText => _boss != null ? _boss.ActionText : "";
     public int ProjectileCount => _projectiles.Count;
     public bool IsCurrentCombat(string runId) => usePreparation && model != null && model.runId == runId &&
         model.phase == LevelPhase.Combat && model.result == LevelResult.None && GameManager.Instance.State == GameState.Playing;
@@ -121,6 +122,7 @@ public partial class LevelControl
         if (model.runId != run || model.phase != LevelPhase.Combat) return;
         if (model.RemainingTime <= 0 && !model.bossSpawned)
         {
+            BeginOvertime();
             model.bossState = BossSpawnState.Spawning;
             _bossRetry -= dt;
             if (_bossRetry <= 0) TrySpawnBoss();
@@ -148,6 +150,7 @@ public partial class LevelControl
         TickProjectiles(dt);
         if (model.runId != run || model.phase != LevelPhase.Combat) return;
         if (preparation.player.IsDead) Settle(LevelResult.Defeat);
+        else if (UsesNodeObjectives) TickNodeObjectives(dt);
         else if (model.normalSpawningComplete && model.bossState != BossSpawnState.Spawning && _combatEnemies.Count == 0)
             Settle(LevelResult.Victory);
         preparation.hud.Refresh();
@@ -242,6 +245,7 @@ public partial class LevelControl
             if (farthest == 0) throw new InvalidOperationException("No reachable boss spawn point away from the player");
             var actor = Instantiate(preparation.combat.bossPrefab, position, Quaternion.identity, preparation.effectsRoot);
             created = actor.gameObject;
+            if (UsesNodeObjectives) preparation.combat.boss.health = Configuration.destructionBossHealth;
             actor.ResetForRun(this, model.runId, preparation.player, preparation.combat.boss);
             actor.Activate(position); RegisterEnemy(actor); _dynamicEnemies.Add(actor); _boss = actor;
             model.bossSpawned = true; model.bossState = BossSpawnState.Active; model.runtimeError = null;
